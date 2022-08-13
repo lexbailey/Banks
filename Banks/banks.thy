@@ -195,7 +195,7 @@ lemma l_monotonic: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((L v P1) \<sqsubset
   by (smt (z3) L_def SEXP_def ex_expr_def ref_by_fun_def ref_preorder.eq_refl)
 
 definition G
-  where [banks_defs]: "G v u = (\<forall> (vu\<^sup><, vu\<^sup>>) \<Zspot> (\<Delta> v) \<longrightarrow> u)\<^sub>e"
+  where [banks_defs]: "G v u = (\<forall> (vu\<^sup><, vu\<^sup>>) \<Zspot> ((\<Delta> v) \<longrightarrow> u))\<^sub>e"
 
 expr_ctr G
 
