@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# Isabelle's session framework is _immensely_ confusing
+#
+# Can someone please explain to me what this error means?
+#
+#     *** Implicit use of directory "/home/lex/work/Banks/Banks" for theory "BanksExamples.banks"
+#     *** Implicit use of session directories: "/home/lex/work/Banks/Banks"
+#     *** The error(s) above occurred in session "BanksExamples" (line 4 of "/home/lex/work/Banks/ROOT")
+#
+# Implicit use of directory? Where was it used? (hint, it's not line 4 of ROOT)
+# I give up, that's why this file exists.
+# I can't write a ROOT file that works both inside and outside of the IDE.
+# Some things work if I add this to the main ROOTS file, some things don't
+# It's a mess. This file is the compromise
+
+# Edit the examples so that they build from `isabelle build`
+for FILE in examples/*.thy ; do
+    grep -vF '(*NO_CI*)' $FILE | sed -e 's#(\*CI_ONLY##g' | sed -e 's#CI_ONLY\*)##g' | sponge $FILE
+done

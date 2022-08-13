@@ -1,5 +1,6 @@
 theory alice_guessing
-  imports Main "../banks"
+  imports Main "../Banks/banks" (*NO_CI*)
+  (*CI_ONLY imports Main "Banks.banks" CI_ONLY*)
 begin
 
 alphabet \<alpha>Guess = 
@@ -56,8 +57,8 @@ lemma
     (Sys (g\<^sup>< = 7 \<and> r\<^sup>> > 0 \<and> n\<^sup>< \<ge> 8 \<and> n\<^sup>< \<le> 10)\<^sub>e x)
   )"
   apply (expr_simp_banks add: Alice_def Guess0_def)
-  apply safe
-  
+  apply auto
+ 
 
 
 end
