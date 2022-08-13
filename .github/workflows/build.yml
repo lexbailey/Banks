@@ -4,6 +4,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Theory
     steps:
+      - run: sudo apt-get install -y moreutils
       - uses: actions/checkout@v3
       - run: ./ci_bullshit
       - uses: lexbailey/isabelle-theory-build-github-action@v4

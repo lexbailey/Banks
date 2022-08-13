@@ -14,6 +14,7 @@
 # Some things work if I add this to the main ROOTS file, some things don't
 # It's a mess. This file is the compromise
 
+set -e
 # Edit the examples so that they build from `isabelle build`
 for FILE in examples/*.thy ; do
     grep -vF '(*NO_CI*)' $FILE | sed -e 's#(\*CI_ONLY##g' | sed -e 's#CI_ONLY\*)##g' | sponge $FILE
