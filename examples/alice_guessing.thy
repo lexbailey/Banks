@@ -1,3 +1,8 @@
+(*
+This is the guessing game from Michael Banks's PhD thesis [On Confidentiality and Formal Methods]
+Example 3.30 in Section 3.3.4 on page 33
+*)
+
 theory alice_guessing
   imports Main "../Banks/banks" (*NO_CI*)
   (*CI_ONLY imports Main "Banks.banks" CI_ONLY*)
@@ -39,17 +44,14 @@ definition Guess0
 definition Alice
   where "Alice = (vu:ga = sys:g \<and> vu:ra = sys:r)\<^sub>e"
 
-definition tA where "tA = \<lparr> ga\<^sub>v = 7, ra\<^sub>v = 1 \<rparr>"
-definition tG where "tG = \<lparr> n\<^sub>v = 1, g\<^sub>v = 7, r\<^sub>v = 1 \<rparr>"
-
-definition tVals where "tVals = \<lparr> vu\<^sub>v = tA, sys\<^sub>v = tG \<rparr>"
-
-value "Guess0 (tVals, tVals)"
-value "Alice tVals"
-
 lemma alice_is_healthy: "VH Alice = Alice"
   by (expr_simp_banks add: Alice_def)
 
+(*
+  In Banks's thesis there is a slight error.
+  where the proof says "r' > 0", it should say "r' < 0".
+  Alternatively: "n \<in> 8..10" could be changed to say "n \<in> 1..6"
+*)
 lemma
   "(
     (infer (Guess0) (Alice) (Vu
