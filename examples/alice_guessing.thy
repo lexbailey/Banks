@@ -1,6 +1,21 @@
 (*
+
 This is the guessing game from Michael Banks's PhD thesis [On Confidentiality and Formal Methods]
 Example 3.30 in Section 3.3.4 on page 33
+
+Alice plays a guessing game.
+
+An integer n in the range 1 to 10 is chosen arbitrarily. Alice can guess the value of n. Her guess
+is the integer g.
+Alice can observe her own guess (of course), and also the value of r. r indicates if the guess was
+correct, too low, or too high:
+r > 0 \<Rightarrow> guess too high
+r = 0 \<Rightarrow> guess correct
+r < 0 \<Rightarrow> guess too low
+
+The example shows how alice can use the "infer" function to determine the possible values of n given
+the guess g and the result r.
+
 *)
 
 theory alice_guessing
