@@ -1,5 +1,5 @@
 theory banks
-  imports Main UTP2.utp "Shallow-Expressions.Shallow_Expressions"
+  imports Main UTP2.utp "Shallow-Expressions.Shallow_Expressions" "UTP-Designs.utp_des_healths"
 begin
 
 (* slight variation on the Isabelle/UTP expr_simp method *)
@@ -44,7 +44,7 @@ translations
   "_liberate1 P x" == "CONST liberate1 P x"
   "_liberate1 P x" <= "_liberate1 (P)\<^sub>e x"
 
-expr_ctr liberate1 (0)
+expr_constructor liberate1 (0)
 
 lemma unrest_liberate1: "a \<sharp> P !\\ a"
   by (expr_simp)
@@ -82,7 +82,7 @@ definition VH3
 (* VH is simply both of the healthiness conditions *)
 definition VH where [banks_defs]: "VH = VH1 \<circ> VH2"
 
-expr_ctr VH
+expr_constructor VH
 
 lemma VH1_idempotent: "VH1 \<circ> VH1 = VH1"
   by (expr_simp add: VH1_def)
@@ -124,7 +124,7 @@ definition U :: "('s \<Rightarrow> bool) \<Rightarrow> ('s obligation_wrapper \<
 
 definition D where [banks_defs]: "D Q = (Q \\ $fog \<down> obs)\<^sub>e"
 
-expr_ctr U D
+expr_constructor U D
 
 lemma p1: "((P \<up> obs \<and> P \<up> fog) \\ $fog)\<^sub>e = ((P \<up> obs) \\ $fog \<and> (P \<up> fog) \\ $fog)\<^sub>e"
   by expr_simp
@@ -152,7 +152,7 @@ lemma "D (U P) = P"
 definition \<Delta> :: "(_ \<Rightarrow> bool) \<Rightarrow> _"
   where [banks_defs]: "\<Delta> V = (V\<^sup>< \<and> V\<^sup>> )\<^sub>e"
 
-expr_ctr \<Delta>
+expr_constructor \<Delta>
 
 lemma \<Delta>_conj_refine: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((\<Delta> V) \<and> P1)\<^sub>e \<sqsubseteq> ((\<Delta> V) \<and> P2)\<^sub>e"
   apply (expr_simp2 add: \<Delta>_def)
@@ -178,9 +178,9 @@ definition L_one_alpha
 
 typ "(('a, 'b) viewed_system \<Rightarrow> \<bool>) \<Rightarrow> (('a, 'b) viewed_system \<Rightarrow> \<bool>) \<Rightarrow> ('a, 'b) viewed_system \<Rightarrow> \<bool>"
 
-expr_ctr L
-expr_ctr L_two_delta
-expr_ctr L_one_alpha
+expr_constructor L
+expr_constructor L_two_delta
+expr_constructor L_one_alpha
 
 (* Localisation is disjunctive *)
 lemma l_disj: "(L v (P1 \<or> P2)\<^sub>e)\<^sub>e = ((L v P1) \<or> (L v P2))\<^sub>e"
@@ -197,35 +197,19 @@ lemma l_monotonic: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((L v P1) \<sqsubset
 definition G
   where [banks_defs]: "G v u = (\<forall> (vu\<^sup><, vu\<^sup>>) \<Zspot> ((\<Delta> v) \<longrightarrow> u))\<^sub>e"
 
-expr_ctr G
-
 definition IR
   where [banks_defs]: "IR V = \<Delta> (U V)"
 
-expr_ctr IR
+expr_constructor G IR
 
 (* note: delta is in this definition, which I think is correct, but it's not in Banks' definition *)
 definition UI :: "_ \<Rightarrow> (_ \<Rightarrow> bool) \<Rightarrow> (_ \<Rightarrow> bool)"
   where [banks_defs]: "UI V P = (\<Delta> (U P) \<and> IR V)\<^sub>e"
 
-(*
 definition infer
-  where "infer P V \<psi> = (P \<and> \<not>(G V (\<lambda> a . (\<not> (\<psi> a)))))\<^sub>e"
-*)
-
-definition infer ::
-    "(('a, 'b, 'c) viewed_system_scheme \<times> ('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>)
-     \<Rightarrow> (('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>)
-        \<Rightarrow> (('a, 'b, 'c) viewed_system_scheme \<times> ('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>) \<Rightarrow> ('a, 'b, 'c) viewed_system_scheme \<times> ('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>"
     where [banks_defs]: "infer P V \<psi> = (P \<and> (Not (G (V) (Not \<circ> \<psi>))))\<^sub>e"
 
-(*definition infer ::
-    "(('a, 'b, 'c) viewed_system_scheme \<times> ('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>)
-     \<Rightarrow> (('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>)
-        \<Rightarrow> (('a, 'b, 'c) viewed_system_scheme \<times> ('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>) \<Rightarrow> ('a, 'b, 'c) viewed_system_scheme \<times> ('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>"
-  where [banks_defs]: "infer P V \<psi> = (P \<and> (G (V) \<psi>))\<^sub>e"*)
-
-expr_ctr infer
+expr_constructor infer
   
 lemma "(VH3 V = V) \<longrightarrow> infer P V \<psi> = (P \<and> (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> \<psi>))\<^sub>e"
   by (expr_simp add: infer_def G_def VH3_def \<Delta>_def)
@@ -238,14 +222,19 @@ definition default_viewed_system_ext :: "('a, 'b, 'c) viewed_system_scheme" wher
 "default_viewed_system_ext =  \<lparr> vu\<^sub>v = default, sys\<^sub>v = default, \<dots> = default \<rparr>"
 instance ..
 end
-
+(*
 definition OK
   where "OK v = (v \<and> (vok = ok))\<^sub>e"
 
-expr_ctr OK
+*)
+
+definition OK
+  where "OK V = V \<up> \<^bold>v\<^sub>D"
+
+(*expr_ctr OK*)
 
 definition VHD
-  where "VHD v = (VH v \<and> OK v)\<^sub>e"
+  where "VHD v = (OK (VH v))"
 
 definition local_design   
 where "local_design c_pre c_post = (
@@ -259,26 +248,18 @@ definition cond :: "('a \<times> 'b \<Rightarrow> bool) \<Rightarrow> _ \<Righta
 syntax "_cond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<lhd> _ \<rhd>/ _)" [52,0,53] 52)
 translations "_cond P b Q" == "CONST cond (P)\<^sub>e (b)\<^sub>e (Q)\<^sub>e"
 
-expr_ctr cond
+expr_constructor cond
 (* TODO if-then-else utp style syntax pull request*)
 
 (* The Sys function takes a system that is defined without the use of viewed_system_scheme and "upgrades" it
    This lets you write system predicates with "foo" instead of "sys:foo", which is useful for when you have
    large or complex predicates *)
-definition Sys :: "('s \<times> 's \<Rightarrow> \<bool>) => ('s, 'a, 'b) viewed_system_scheme \<times> ('s, 'c, 'd) viewed_system_scheme \<Rightarrow> \<bool>"
-  where [banks_defs]: "Sys system = (\<lambda> a .
-    system (get\<^bsub>sys\<^esub> (fst a), get\<^bsub>sys\<^esub> (snd a))
-  )"
+definition Sys where [banks_defs]: "Sys system = (system \<up> sys\<^sup>2)\<^sub>e"
+definition Sys1 where [banks_defs]: "Sys1 system = (system \<up> sys)\<^sub>e"
 
-definition Vu :: "('s \<times> 's \<Rightarrow> \<bool>) => ('a, 's, 'b) viewed_system_scheme \<times> ('c, 's, 'd) viewed_system_scheme \<Rightarrow> \<bool>"
-  where [banks_defs]: "Vu bview = (\<lambda> a .
-    bview (get\<^bsub>vu\<^esub> (fst a), get\<^bsub>vu\<^esub> (snd a))
-  )"
-
-definition Vu1 :: "('s \<Rightarrow> \<bool>) => ('a, 's, 'b) viewed_system_scheme \<Rightarrow> \<bool>"
-  where [banks_defs]: "Vu1 bview = (\<lambda> a .
-    bview (get\<^bsub>vu\<^esub> a)
-  )"
+(* Same as for Sys, but for Vu *)
+definition Vu where [banks_defs]: "Vu bview = (bview \<up> vu\<^sup>2)\<^sub>e"
+definition Vu1 where [banks_defs]: "Vu1 bview = (bview \<up> vu)\<^sub>e"
 
 (* simplify with banks' definitions *)
 method expr_simp_banks uses add = ((expr_simp2 add: banks_defs add)?)
