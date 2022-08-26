@@ -10,12 +10,6 @@ method expr_simp2 uses add =
 
 named_theorems banks_defs
 
-instantiation int :: default
-begin
-definition "default_int = (0 :: int)"
-instance ..
-end
-
 alphabet 's obligation_wrapper =
   obs :: 's
   fog :: 's
@@ -24,9 +18,7 @@ alphabet ('s, 'v) viewed_system =
   vu :: 'v
   sys :: 's
 
-alphabet ('s, 'v) viewed_design = "('s, 'v) viewed_system" +
-  ok :: bool
-  vok :: bool
+term viewed_system_ext
 
 (* liberate1 is used to define VH3. it is like liberate, except that is uses "there exists one"
  instead of "there exists" *)
@@ -222,24 +214,22 @@ definition default_viewed_system_ext :: "('a, 'b, 'c) viewed_system_scheme" wher
 "default_viewed_system_ext =  \<lparr> vu\<^sub>v = default, sys\<^sub>v = default, \<dots> = default \<rparr>"
 instance ..
 end
-(*
-definition OK
-  where "OK v = (v \<and> (vok = ok))\<^sub>e"
-
-*)
 
 definition OK
-  where "OK V = V \<up> \<^bold>v\<^sub>D"
+  where "OK V = (\<lambda> a . (V ((base\<^sub>L)\<^sub>e a)) \<and> ((more\<^sub>L:ok)\<^sub>e a))"
 
-(*expr_ctr OK*)
+expr_constructor OK
+
+definition ViewDes
+  where "ViewDes V = (\<lambda> a .
+    V (
+        \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> (get\<^bsub>viewed_system.more\<^sub>L\<^esub> (fst a))), \<dots> = get\<^bsub>viewed_system.base\<^sub>L\<^esub> (fst a) \<rparr>,
+        \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> (get\<^bsub>viewed_system.more\<^sub>L\<^esub> (snd a))), \<dots> = get\<^bsub>viewed_system.base\<^sub>L\<^esub> (snd a) \<rparr>
+      )
+  )"
 
 definition VHD
   where "VHD v = (OK (VH v))"
-
-definition local_design   
-where "local_design c_pre c_post = (
-    (vok\<^sup>< \<and> c_pre) \<longrightarrow> (vok\<^sup>> \<and> c_post)
-  )\<^sub>e"
 
 (* Conditional syntax copied from Simon's UTP Practical Session (Pr19, PROF) *)
 definition cond :: "('a \<times> 'b \<Rightarrow> bool) \<Rightarrow> _ \<Rightarrow> ('a \<times> 'b \<Rightarrow> bool) \<Rightarrow> ('a \<times> 'b \<Rightarrow> bool)" where
