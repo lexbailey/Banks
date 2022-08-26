@@ -221,12 +221,10 @@ definition OK
 expr_constructor OK
 
 definition ViewDes
-  where "ViewDes V = (\<lambda> a .
-    V (
+  where "ViewDes V = (\<lambda> a . V (
         \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> (get\<^bsub>viewed_system.more\<^sub>L\<^esub> (fst a))), \<dots> = get\<^bsub>viewed_system.base\<^sub>L\<^esub> (fst a) \<rparr>,
         \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> (get\<^bsub>viewed_system.more\<^sub>L\<^esub> (snd a))), \<dots> = get\<^bsub>viewed_system.base\<^sub>L\<^esub> (snd a) \<rparr>
-      )
-  )"
+  ))"
 
 definition VHD
   where "VHD v = (OK (VH v))"
