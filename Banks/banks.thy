@@ -215,21 +215,115 @@ definition default_viewed_system_ext :: "('a, 'b, 'c) viewed_system_scheme" wher
 instance ..
 end
 
+definition pair_map :: "('a \<Rightarrow> 'b) \<Rightarrow> ('a * 'a) \<Rightarrow> ('b * 'b)"
+  where [banks_defs]:"pair_map f p = (f (fst p), f (snd p))"
+
+definition viewed_system_undesigned
+  where [banks_defs]:"viewed_system_undesigned vs = \<lparr>
+    vu\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>vu\<^esub> vs),
+    sys\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>sys\<^esub> vs),
+    \<dots> = (get\<^bsub>more\<^sub>L\<^esub> vs)
+  \<rparr>"
+(*
+definition view_undesigned
+  where [banks_defs]:"view_undesigned v = (v \<circ> (pair_map viewed_system_undesigned))"
+*)
+
+definition viewed_system_redesigned :: "('a des_vars_scheme, 'b des_vars_scheme, 'c) viewed_system_scheme \<Rightarrow> ('a, 'b des_vars_scheme, 'c) viewed_system_scheme des_vars_ext"
+  where [banks_defs]:"viewed_system_redesigned vs = \<lparr>
+    ok\<^sub>v = get\<^bsub>ok\<^esub> (get\<^bsub>sys\<^esub> vs),
+    \<dots> = \<lparr>
+      vu\<^sub>v = (get\<^bsub>vu\<^esub> vs),
+      sys\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>sys\<^esub> vs),
+      \<dots> = (get\<^bsub>more\<^sub>L\<^esub> vs)
+    \<rparr>
+  \<rparr>"
+
+definition view_redesigned
+  where [banks_defs]:"view_redesigned v = (v \<circ> (pair_map viewed_system_redesigned))"
+
+definition viewed_system_unredesigned
+  where [banks_defs]:"viewed_system_unredesigned vs = \<lparr>
+      vu\<^sub>v = (get\<^bsub>vu\<^esub> (get\<^bsub>\<^bold>v\<^sub>D\<^esub> vs)),
+      sys\<^sub>v = \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> vs), \<dots> = (get\<^bsub>sys\<^esub> (get\<^bsub>\<^bold>v\<^sub>D\<^esub> vs)) \<rparr>,
+      \<dots> = (get\<^bsub>more\<^sub>L\<^esub> (get\<^bsub>\<^bold>v\<^sub>D\<^esub> vs))
+  \<rparr>"
+
+definition view_unredesigned
+  where [banks_defs]:"view_unredesigned v = (v \<circ> (pair_map viewed_system_unredesigned))"
+
+definition vdesign where
+[banks_defs]: "vdesign P Q = ((vu:ok\<^sup>< \<and> P)\<^sub>e \<longrightarrow> (vu:ok\<^sup>> \<and> Q)\<^sub>e)"
+
+syntax 
+  "_vdesign"  :: "logic \<Rightarrow> logic \<Rightarrow> logic" (infix "\<turnstile>\<^sub>v" 85)
+
+translations
+  "P \<turnstile>\<^sub>v Q" == "CONST vdesign P Q"
+
+
 definition OK
-  where "OK V = (\<lambda> a . (V ((base\<^sub>L)\<^sub>e a)) \<and> ((more\<^sub>L:ok)\<^sub>e a))"
+  where [banks_defs]: "OK V = (\<lambda> a .
+    (V a)
+    \<and>
+    ((sys:ok = vu:ok)\<^sub>e a)
+  )"
 
 expr_constructor OK
 
+(*
 definition ViewDes
   where "ViewDes V = (\<lambda> a . V (
         \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> (get\<^bsub>viewed_system.more\<^sub>L\<^esub> (fst a))), \<dots> = get\<^bsub>viewed_system.base\<^sub>L\<^esub> (fst a) \<rparr>,
         \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> (get\<^bsub>viewed_system.more\<^sub>L\<^esub> (snd a))), \<dots> = get\<^bsub>viewed_system.base\<^sub>L\<^esub> (snd a) \<rparr>
   ))"
+*)
 
 definition VHD
-  where "VHD v = (OK (VH v))"
+  where [banks_defs]: "VHD v = (OK (VH v))"
+
+
+
+
+value "true (1::nat)"
+
+value "(\<not> (1::nat) = 1)\<^sub>e (1::nat)"
+
+term \<Delta>
+
+term pre
+       
+term "( (\<not> ( (L V (\<not> pre')\<^sub>e))))"
+
+term "(L V post')"
+
+
+term "
+(view_redesigned(
+( (\<not> ( (L V (\<not> (\<Delta> pre'))\<^sub>e))))
+\<turnstile>\<^sub>r
+(L V post')
+))
+"
+term " (L V (view_redesigned (pre' \<turnstile>\<^sub>n post')))"
+(*
+term "
+(view_redesigned(
+( (\<not> ( (L V (\<not> (\<Delta> pre'))\<^sub>e))))
+\<turnstile>\<^sub>r
+(L V post')
+)
+)
+=
+(L V (view_redesigned (pre' \<turnstile>\<^sub>n post')))"
+
+term L
+
+lemma "(L V (view_redesigned (pre' \<turnstile>\<^sub>n post'))) = ( view_redesigned ((\<not> (L V (\<not> pre')\<^sub>e)) \<turnstile>\<^sub>n (L V post')) )"
+*)
 
 (* Conditional syntax copied from Simon's UTP Practical Session (Pr19, PROF) *)
+(*
 definition cond :: "('a \<times> 'b \<Rightarrow> bool) \<Rightarrow> _ \<Rightarrow> ('a \<times> 'b \<Rightarrow> bool) \<Rightarrow> ('a \<times> 'b \<Rightarrow> bool)" where
 [expr_defs]: "cond P b Q = (P \<and> b \<or> Q \<and> \<not>b)\<^sub>e"
 
@@ -237,6 +331,7 @@ syntax "_cond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> l
 translations "_cond P b Q" == "CONST cond (P)\<^sub>e (b)\<^sub>e (Q)\<^sub>e"
 
 expr_constructor cond
+*)
 (* TODO if-then-else utp style syntax pull request*)
 
 (* The Sys function takes a system that is defined without the use of viewed_system_scheme and "upgrades" it
@@ -245,9 +340,13 @@ expr_constructor cond
 definition Sys where [banks_defs]: "Sys system = (system \<up> sys\<^sup>2)\<^sub>e"
 definition Sys1 where [banks_defs]: "Sys1 system = (system \<up> sys)\<^sub>e"
 
+expr_constructor Sys Sys1
+
 (* Same as for Sys, but for Vu *)
 definition Vu where [banks_defs]: "Vu bview = (bview \<up> vu\<^sup>2)\<^sub>e"
 definition Vu1 where [banks_defs]: "Vu1 bview = (bview \<up> vu)\<^sub>e"
+
+expr_constructor Vu Vu1
 
 (* simplify with banks' definitions *)
 method expr_simp_banks uses add = ((expr_simp2 add: banks_defs add)?)
