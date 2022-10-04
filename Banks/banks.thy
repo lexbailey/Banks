@@ -15,8 +15,8 @@ alphabet 's obligation_wrapper =
   fog :: 's
 
 alphabet ('s, 'v) viewed_system =
-  vu :: 'v
   sys :: 's
+  vu :: 'v
 
 term viewed_system_ext
 
@@ -78,6 +78,9 @@ expr_constructor VH
 
 lemma VH1_idempotent: "VH1 \<circ> VH1 = VH1"
   by (expr_simp add: VH1_def)
+
+lemma VH_is_VH1[banks_defs]: "VH v = VH1 v"
+  by (simp add: VH_def VH2_def)
 
 (*
 lemma VH3_idempotent: "VH3 \<circ> VH3 = VH3"
@@ -157,8 +160,9 @@ lemma  ex_conj_refine: "(V \<and> P1)\<^sub>e \<sqsubseteq> (V \<and> P2)\<^sub>
   by (smt (z3) prod.sel(1) prod.sel(2) ref_by_fun_def ref_preorder.order_refl)
 
 (*option 3*)
+(*change this so that the second argument is more generic: rel[s] (the later rel[des[s]])*)
 definition L
-  where [banks_defs]: "L V P = (\<exists> (sys\<^sup><, sys\<^sup>>, vu\<^sup><) \<Zspot> (\<Delta> V \<and> P))\<^sub>e"
+  where [banks_defs]: "L V P = (\<exists> (sys\<^sup><, sys\<^sup>>, vu\<^sup><) \<Zspot> (\<Delta> V \<and> P \<up> sys\<^sup>2 ))\<^sub>e"
 
 (*option 1*)
 definition L_two_delta
@@ -184,8 +188,8 @@ find_theorems "(\<sqsubseteq>)"
 
 lemma l_monotonic: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((L v P1) \<sqsubseteq> (L v P2))"
   (* TODO can I speed up this proof using \<Delta>_conj_refine and ex_conj_refine*)
-  by (smt (z3) L_def SEXP_def ex_expr_def ref_by_fun_def ref_preorder.eq_refl)
-
+  by (pred_auto add: L_def)
+  
 definition G
   where [banks_defs]: "G v u = (\<forall> (vu\<^sup><, vu\<^sup>>) \<Zspot> ((\<Delta> v) \<longrightarrow> u))\<^sub>e"
 
@@ -203,7 +207,7 @@ definition infer
 
 expr_constructor infer
   
-lemma "(VH3 V = V) \<longrightarrow> infer P V \<psi> = (P \<and> (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> \<psi>))\<^sub>e"
+lemma "V is VH3 \<longrightarrow> infer P V \<psi> = (P \<and> (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> \<psi>))\<^sub>e"
   by (expr_simp add: infer_def G_def VH3_def \<Delta>_def)
     
 
@@ -211,47 +215,16 @@ lemma "(VH3 V = V) \<longrightarrow> infer P V \<psi> = (P \<and> (\<exists> (vu
 instantiation viewed_system_ext :: (default, default, default) default
 begin
 definition default_viewed_system_ext :: "('a, 'b, 'c) viewed_system_scheme" where 
-"default_viewed_system_ext =  \<lparr> vu\<^sub>v = default, sys\<^sub>v = default, \<dots> = default \<rparr>"
+"default_viewed_system_ext =  \<lparr> sys\<^sub>v = default, vu\<^sub>v = default, \<dots> = default \<rparr>"
 instance ..
 end
 
 definition pair_map :: "('a \<Rightarrow> 'b) \<Rightarrow> ('a * 'a) \<Rightarrow> ('b * 'b)"
   where [banks_defs]:"pair_map f p = (f (fst p), f (snd p))"
 
-definition viewed_system_undesigned
-  where [banks_defs]:"viewed_system_undesigned vs = \<lparr>
-    vu\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>vu\<^esub> vs),
-    sys\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>sys\<^esub> vs),
-    \<dots> = (get\<^bsub>more\<^sub>L\<^esub> vs)
-  \<rparr>"
+
+
 (*
-definition view_undesigned
-  where [banks_defs]:"view_undesigned v = (v \<circ> (pair_map viewed_system_undesigned))"
-*)
-
-definition viewed_system_redesigned :: "('a des_vars_scheme, 'b des_vars_scheme, 'c) viewed_system_scheme \<Rightarrow> ('a, 'b des_vars_scheme, 'c) viewed_system_scheme des_vars_ext"
-  where [banks_defs]:"viewed_system_redesigned vs = \<lparr>
-    ok\<^sub>v = get\<^bsub>ok\<^esub> (get\<^bsub>sys\<^esub> vs),
-    \<dots> = \<lparr>
-      vu\<^sub>v = (get\<^bsub>vu\<^esub> vs),
-      sys\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>sys\<^esub> vs),
-      \<dots> = (get\<^bsub>more\<^sub>L\<^esub> vs)
-    \<rparr>
-  \<rparr>"
-
-definition view_redesigned
-  where [banks_defs]:"view_redesigned v = (v \<circ> (pair_map viewed_system_redesigned))"
-
-definition viewed_system_unredesigned
-  where [banks_defs]:"viewed_system_unredesigned vs = \<lparr>
-      vu\<^sub>v = (get\<^bsub>vu\<^esub> (get\<^bsub>\<^bold>v\<^sub>D\<^esub> vs)),
-      sys\<^sub>v = \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> vs), \<dots> = (get\<^bsub>sys\<^esub> (get\<^bsub>\<^bold>v\<^sub>D\<^esub> vs)) \<rparr>,
-      \<dots> = (get\<^bsub>more\<^sub>L\<^esub> (get\<^bsub>\<^bold>v\<^sub>D\<^esub> vs))
-  \<rparr>"
-
-definition view_unredesigned
-  where [banks_defs]:"view_unredesigned v = (v \<circ> (pair_map viewed_system_unredesigned))"
-
 definition vdesign where
 [banks_defs]: "vdesign P Q = ((vu:ok\<^sup>< \<and> P)\<^sub>e \<longrightarrow> (vu:ok\<^sup>> \<and> Q)\<^sub>e)"
 
@@ -260,30 +233,24 @@ syntax
 
 translations
   "P \<turnstile>\<^sub>v Q" == "CONST vdesign P Q"
-
-
-definition OK
-  where [banks_defs]: "OK V = (\<lambda> a .
-    (V a)
-    \<and>
-    ((sys:ok = vu:ok)\<^sub>e a)
-  )"
-
-expr_constructor OK
-
-(*
-definition ViewDes
-  where "ViewDes V = (\<lambda> a . V (
-        \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> (get\<^bsub>viewed_system.more\<^sub>L\<^esub> (fst a))), \<dots> = get\<^bsub>viewed_system.base\<^sub>L\<^esub> (fst a) \<rparr>,
-        \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> (get\<^bsub>viewed_system.more\<^sub>L\<^esub> (snd a))), \<dots> = get\<^bsub>viewed_system.base\<^sub>L\<^esub> (snd a) \<rparr>
-  ))"
 *)
 
+(* Like with VH2, this healthiness condition is not particularly useful to us in this implementation
+of Banks's work. OK does not need to do anything, since we simply ignore the variable ok\<^sub>v.
+This is safe to do because there is no mechanism to inspect or assign to ok\<^sub>v. No predicate could
+refer to ok\<^sub>v in an unhealthy way, because no predicate can refer to ok\<^sub>v at all.  *)
+definition OK
+  where [banks_defs]: "OK = id"
+
+(* as such, VHD is also just VH *)
 definition VHD
   where [banks_defs]: "VHD v = (OK (VH v))"
 
+(* and since VH is just VH1, we can simplify this to just VH1 *)
+lemma  VHD_is_VH1[banks_defs]: "VHD v = VH1 v"
+  by (simp add: VHD_def OK_def VH_def VH2_def)
 
-
+expr_constructor OK VHD
 
 value "true (1::nat)"
 
@@ -305,22 +272,44 @@ term "
 (L V post')
 ))
 "
-term " (L V (view_redesigned (pre' \<turnstile>\<^sub>n post')))"
-(*
-term "
-(view_redesigned(
-( (\<not> ( (L V (\<not> (\<Delta> pre'))\<^sub>e))))
-\<turnstile>\<^sub>r
-(L V post')
-)
-)
-=
-(L V (view_redesigned (pre' \<turnstile>\<^sub>n post')))"
 
-term L
+definition condition
+  where "condition v = (\<lambda> (a, b). v a)"
 
-lemma "(L V (view_redesigned (pre' \<turnstile>\<^sub>n post'))) = ( view_redesigned ((\<not> (L V (\<not> pre')\<^sub>e)) \<turnstile>\<^sub>n (L V post')) )"
-*)
+term "(ok)\<^sub>e"
+
+definition view_des_cond :: "(('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>) \<Rightarrow> ('a des_vars_scheme, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>"
+  where [banks_defs]: "view_des_cond v = (\<lambda> a .
+    ((ok)\<^sub>e (get\<^bsub>sys\<^esub> a)) \<and> (
+    v \<lparr>
+      sys\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>sys\<^esub> a)
+      ,vu\<^sub>v = get\<^bsub>vu\<^esub> a
+      ,\<dots> = get\<^bsub>more\<^sub>L\<^esub> a
+    \<rparr>)
+  )"
+
+definition to_viewed_design
+  where [banks_defs]: "to_viewed_design v = (\<lambda> a.
+    (let b = (pair_map (\<lambda> b . \<lparr>
+     ok\<^sub>v = get\<^bsub>ok\<^esub> (get\<^bsub>sys\<^esub> b)
+     ,\<dots> = \<lparr>
+          sys\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>sys\<^esub> b)
+          ,vu\<^sub>v = (get\<^bsub>vu\<^esub> b)
+          ,\<dots> = get\<^bsub>more\<^sub>L\<^esub> b
+        \<rparr>
+      \<rparr>)
+      a
+    )in v b)
+  )"
+
+
+lemma "(
+    (V is VHD) \<and>
+    (\<forall> a . ((sys:ok\<^sup>< \<longrightarrow> sys:ok\<^sup>>)\<^sub>e a \<longrightarrow> (\<Delta> (view_des_cond V)))\<^sub>e a)
+  ) \<longrightarrow>
+ ((L (view_des_cond V) ((pre' \<turnstile>\<^sub>r post'))) = (to_viewed_design (((not_pred (L V (not_pred pre'))) \<turnstile>\<^sub>r (L V post')))))"
+  apply (expr_simp add: banks_defs)
+  by metis
 
 (* Conditional syntax copied from Simon's UTP Practical Session (Pr19, PROF) *)
 (*
@@ -350,5 +339,6 @@ expr_constructor Vu Vu1
 
 (* simplify with banks' definitions *)
 method expr_simp_banks uses add = ((expr_simp2 add: banks_defs add)?)
+method pred_auto_banks uses add = ((pred_auto add: banks_defs add)?)
 
 end

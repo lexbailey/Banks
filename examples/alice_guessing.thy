@@ -1,5 +1,4 @@
 (*
-
 This is the guessing game from Michael Banks's PhD thesis [On Confidentiality and Formal Methods]
 Example 3.30 in Section 3.3.4 on page 33
 

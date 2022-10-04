@@ -28,7 +28,7 @@ alphabet v3_view_vars =
 
 definition V3 where "V3 = (vu:d3 = sys:x \<and> (if sys:x < sys:y then (vu:e3 = 0) else vu:e3 = 1))\<^sub>e"
 
-definition ExSys where "ExSys = (sys:x\<^sup>> \<ge> 0 \<and> sys:y\<^sup>> \<ge> 0 \<and> sys:x\<^sup>> + sys:y\<^sup>> = 10)\<^sub>e"
+definition ExSys where "ExSys = (x\<^sup>> \<ge> 0 \<and> y\<^sup>> \<ge> 0 \<and> x\<^sup>> + y\<^sup>> = 10)\<^sub>e"
 
 definition ExSys_one_alpha where "ExSys_one_alpha = (sys:x \<ge> 0 \<and> sys:y \<ge> 0 \<and> sys:x + sys:y = 10)\<^sub>e"
 
