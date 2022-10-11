@@ -3,6 +3,7 @@ theory banks
 begin
 
 (* slight variation on the Isabelle/UTP expr_simp method *)
+(* TODO pull request to add this to base isabelle/UTP*)
 method expr_simp2 uses add = 
   ((simp add: expr_simps add)? \<comment> \<open> Perform any possible simplifications retaining the lens structure \<close>
    ;((simp add: fun_eq_iff prod.case_eq_if alpha_splits expr_defs lens_defs add)? ; \<comment> \<open> Explode the rest \<close>
@@ -303,7 +304,59 @@ definition to_viewed_design
   )"
 
 
-lemma "(
+term "(L (V::('a des_vars_scheme, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>) ((pre' \<turnstile>\<^sub>r post')))"
+
+term "(L V ((post'::'a hrel)))"
+
+term "(not_pred (L (V::('a des_vars_scheme, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>) (not_pred ((pre'::'a hrel) \<up> \<^bold>v\<^sub>D\<^sup>2))))"
+
+term "(not_pred (L (V::('a des_vars_scheme, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>) (not_pred ((pre'::'a hrel) \<up> \<^bold>v\<^sub>D\<^sup>2)))) \<turnstile>\<^sub>r (L V ((post'::'a hrel) \<up> \<^bold>v\<^sub>D\<^sup>2))"
+
+
+lemma "(pre' \<turnstile>\<^sub>r post') = (($ok)\<^sup>< \<and> \<lceil>pre'\<rceil>\<^sub>D \<longrightarrow> ($ok)\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)\<^sub>e"
+  apply (simp only: rdesign_def design_def)
+
+
+  thm disj_assoc
+
+  find_theorems "Not :: bool \<Rightarrow> _" "(\<or>) :: bool \<Rightarrow> _" "(\<and>) :: bool \<Rightarrow> _"
+
+lemma view_local_design [banks_defs] :
+  assumes "(V::('a des_vars_scheme, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>) is VHD"
+  assumes "\<Delta> V \<down> sys\<^sup>2 is H1"
+  assumes "\<Delta> V \<down> sys\<^sup>2 is H2"
+  assumes "\<Delta> V \<down> sys\<^sup>2 is H3"
+  assumes "\<Delta> V \<down> sys\<^sup>2 is H4"
+  assumes "(pre' \<turnstile>\<^sub>r post') is H1"
+  assumes "(pre' \<turnstile>\<^sub>r post') is H2"
+  assumes "(pre' \<turnstile>\<^sub>r post') is H3"
+  assumes "(pre' \<turnstile>\<^sub>r post') is H4"
+  shows "
+    (L V (pre' \<turnstile>\<^sub>r post')  \<down> vu\<^sup>2)
+    =
+    ((\<not> (L V (\<not> (pre' \<up> \<^bold>v\<^sub>D\<^sup>2)))) \<turnstile>\<^sub>r (L V (post' \<up> \<^bold>v\<^sub>D\<^sup>2)) \<down> \<^bold>v\<^sub>D\<^sup>2 \<down> vu\<^sup>2)
+  "
+proof - 
+  have "(L V (pre' \<turnstile>\<^sub>r post')  \<down> vu\<^sup>2) = (\<exists> (sys\<^sup><, sys\<^sup>>, vu\<^sup><) \<Zspot> (\<Delta> V \<and> (pre' \<turnstile>\<^sub>r post') \<up> sys\<^sup>2 ))\<^sub>e \<down> vu\<^sup>2"
+    by (simp only: L_def)
+  also have "... = (\<exists> (sys\<^sup><, sys\<^sup>>, vu\<^sup><) \<Zspot> \<Delta> V \<and> (($ok)\<^sup>< \<and> \<lceil>pre'\<rceil>\<^sub>D \<longrightarrow> ($ok)\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)\<^sub>e \<up> sys\<^sup>2)\<^sub>e \<down> vu\<^sup>2"
+    by (simp add: rdesign_def design_def)
+  also have "... = (\<exists> (sys\<^sup><, sys\<^sup>>, vu\<^sup><) \<Zspot> \<Delta> V \<and> (\<not>($ok)\<^sup>< \<or> \<not>\<lceil>pre'\<rceil>\<^sub>D \<or> ($ok)\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)\<^sub>e \<up> sys\<^sup>2)\<^sub>e \<down> vu\<^sup>2"
+    by (simp only: imp_conv_disj de_Morgan_conj disj_assoc)
+  also have "... = (
+      (\<not>($ok)\<^sup>< \<up> sys\<^sup>2 \<or>
+      (\<exists> (sys\<^sup><, sys\<^sup>>, vu\<^sup><) \<Zspot> \<Delta> V \<and> \<not> (\<lceil>pre'\<rceil>\<^sub>D \<up> sys\<^sup>2)))
+ \<or>
+      (($ok)\<^sup>> \<up> sys\<^sup>2 \<and>  (\<exists> (sys\<^sup><, sys\<^sup>>, vu\<^sup><) \<Zspot>  \<Delta> V \<and> (\<lceil>post'\<rceil>\<^sub>D \<up> sys\<^sup>2)))
+  ) \<down> vu\<^sup>2"
+    apply (pred_auto add: banks_defs assms)
+         apply blast
+    try
+    
+
+
+
+lemma view_local_design [banks_defs] :"(
     (V is VHD) \<and>
     (\<forall> a . ((sys:ok\<^sup>< \<longrightarrow> sys:ok\<^sup>>)\<^sub>e a \<longrightarrow> (\<Delta> (view_des_cond V)))\<^sub>e a)
   ) \<longrightarrow>
@@ -325,7 +378,8 @@ expr_constructor cond
 
 (* The Sys function takes a system that is defined without the use of viewed_system_scheme and "upgrades" it
    This lets you write system predicates with "foo" instead of "sys:foo", which is useful for when you have
-   large or complex predicates *)
+   large or complex predicates
+   it is just a slightly nicer syntax for the up arrow notation. *)
 definition Sys where [banks_defs]: "Sys system = (system \<up> sys\<^sup>2)\<^sub>e"
 definition Sys1 where [banks_defs]: "Sys1 system = (system \<up> sys)\<^sub>e"
 

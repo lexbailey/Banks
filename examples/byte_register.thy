@@ -29,15 +29,15 @@ definition ST
 
 (* DBL doubles the number, if it is low enough to double without overflow *)
 definition DBL
-  where "DBL = Sys ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e \<turnstile>\<^sub>r (reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e)"
+  where "DBL = (reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e \<turnstile>\<^sub>r (reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e"
 
 (* A view of the high nibble *)
 definition Hv
-  where "Hv = OK (vu:\<^bold>v\<^sub>D:reg\<^sub>H = floor (sys:\<^bold>v\<^sub>D:reg / 16) \<and> vu:\<^bold>v\<^sub>D:err\<^sub>H = sys:\<^bold>v\<^sub>D:err)\<^sub>e"
+  where "Hv = OK (vu:reg\<^sub>H = floor (sys:\<^bold>v\<^sub>D:reg / 16) \<and> vu:err\<^sub>H = sys:\<^bold>v\<^sub>D:err)\<^sub>e"
 
 (* A view of the low nibble *)
 definition Lv
-  where "Lv = OK (vu:\<^bold>v\<^sub>D:reg\<^sub>L = sys:\<^bold>v\<^sub>D:reg mod 16 \<and> vu:\<^bold>v\<^sub>D:err\<^sub>L = sys:\<^bold>v\<^sub>D:err)\<^sub>e"
+  where "Lv = OK (vu:reg\<^sub>L = sys:\<^bold>v\<^sub>D:reg mod 16 \<and> vu:err\<^sub>L = sys:\<^bold>v\<^sub>D:err)\<^sub>e"
 
 (*
 Consider an example where the register stores the value 60
@@ -46,7 +46,8 @@ Consider an example where the register stores the value 60
 
 Here is an observation on the final state, with this value
 *)
-definition \<Phi> where "\<Phi> = ((\<^bold>v\<^sub>D\<^sup>>:reg = 60 \<and> \<^bold>v\<^sub>D\<^sup>>:err = 0)\<^sub>e)"
+
+definition \<Phi> where "\<Phi> = (reg = 60 \<and> err = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>>"
 
 (*
   Hv and Lv extract the high nibble and low nibble, respectively
@@ -55,23 +56,40 @@ definition \<Phi> where "\<Phi> = ((\<^bold>v\<^sub>D\<^sup>>:reg = 60 \<and> \<
       LLLL = 1100(b2) = 12(b10)
 *)
 
-lemma "(L Hv \<Phi>) = Vu (\<^bold>v\<^sub>D\<^sup>>:reg\<^sub>H = 3 \<and> \<^bold>v\<^sub>D\<^sup>>:err\<^sub>H = 0)\<^sub>e"
+lemma "(L Hv \<Phi>) = (reg\<^sub>H = 3 \<and> err\<^sub>H = 0)\<^sub>e \<up> vu\<^sup>>"
   by (expr_simp_banks add: Hv_def \<Phi>_def)
 
-lemma "(L Lv \<Phi>) = ((Vu1 ((reg\<^sub>L = 12 \<and> err\<^sub>L = 0)\<^sub>e \<up> \<^bold>v\<^sub>D))\<^sup>>)\<^sub>e"
+lemma "(L Lv \<Phi>) = (reg\<^sub>L = 12 \<and> err\<^sub>L = 0)\<^sub>e \<up> vu\<^sup>>"
   by (expr_simp_banks add: Lv_def \<Phi>_def)
 
+term "(Hv \<and> (ST \<up> \<^bold>v\<^sub>D \<up> sys))"
 
-term "L (Hv \<and> (ST \<up> \<^bold>v\<^sub>D \<up> sys)) (DBL \<down> sys\<^sup>2) \<down> vu\<^sup>2"
+term "((L (Hv \<and> (ST \<up> \<^bold>v\<^sub>D \<up> sys)) (DBL)) \<down> vu\<^sup>2)"
 
-term "(reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e"
+term "(((reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e \<turnstile>\<^sub>r (((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e)) \<down> \<^bold>v\<^sub>D\<^sup>2"
 
-term "(((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e"
+term "
+  (L (Hv \<and> (ST \<up> \<^bold>v\<^sub>D \<up> sys)) DBL \<down> vu\<^sup>2)
+  =
+  ((reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e \<turnstile>\<^sub>r (((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e) \<down> \<^bold>v\<^sub>D\<^sup>2
+  "
 
-term "((reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e \<turnstile>\<^sub>r (((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e)"
+lemma "
+  (L (Hv \<and> (ST \<up> \<^bold>v\<^sub>D \<up> sys)) DBL \<down> vu\<^sup>2)
+  =
+  ((reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e \<turnstile>\<^sub>r (((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e) \<down> \<^bold>v\<^sub>D\<^sup>2
+  "
+  apply (expr_simp_banks)
+  apply pred_auto
 
+  term "DBL"
+  term "L (Lv \<and> (ST \<up> \<^bold>v\<^sub>D \<up> sys)) DBL"
 
-lemma "L (Hv \<and> (ST \<up> \<^bold>v\<^sub>D \<up> sys)) (DBL \<down> sys\<^sup>2) \<down> vu\<^sup>2 = (reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e \<turnstile>\<^sub>r (((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e"
+lemma "
+  (L (Lv \<and> (ST \<up> \<^bold>v\<^sub>D \<up> sys)) (DBL))
+  =
+  true
+  "
   apply (expr_simp_banks)
   apply pred_auto
 
@@ -79,7 +97,7 @@ lemma "L (Hv \<and> (ST \<up> \<^bold>v\<^sub>D \<up> sys)) (DBL \<down> sys\<^s
 explicitly defines the behaviour in the overflow case. If overflow is detected, then the err bit is
 set and the register contains an arbitrary value.*)
 definition DBL2
-  where "DBL2 = Sys (
+  where "DBL2 = (
     (reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 255 \<and> err\<^sup>< = 0)\<^sub>e
     \<turnstile>\<^sub>r
     ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0) \<lhd> (reg \<le> 127) \<rhd> (reg\<^sup>> \<ge> 0 \<and> reg\<^sup>> \<le> 255 \<and> err\<^sup>> = 0))\<^sub>e
@@ -88,46 +106,5 @@ definition DBL2
 (* DBL is refined by DBL2 *)
 lemma "DBL \<sqsubseteq> DBL2"
   by (expr_simp_banks add: DBL_def DBL2_def, pred_auto)
-
-term Lv
-
-
-term "(reg\<^sub>L \<ge> 0 \<and> reg\<^sub>L \<le> 7 \<and> err\<^sub>L = 0)\<^sub>e"
-
-term "(((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> (err\<^sub>H\<^sup>> = 0))\<^sub>e"
-
-term "L (Hv \<and> Sys1 (ST \<up> \<^bold>v\<^sub>D)) DBL"
-
-term "L (Hv \<and> Sys1 (ST \<up> \<^bold>v\<^sub>D)) DBL"
-
-term "(((vu:\<^bold>v\<^sub>D:reg\<^sub>H\<^sup>> = (vu:v\<^sub>D:reg\<^sub>H\<^sup>< * 2)) \<or> (vu:v\<^sub>D:reg\<^sub>H\<^sup>> = ((vu:v\<^sub>D:reg\<^sub>H\<^sup>< * 2) + 1))) \<and> (vu:v\<^sub>D:err\<^sub>H\<^sup>> = 0))\<^sub>e"
-
-term "(Vu1 (reg\<^sub>H \<ge> 0 \<and> reg\<^sub>H \<le> 7 \<and> err\<^sub>H = 0)\<^sub>e)\<^sup><"
-term "
-  (Vu1 (\<^bold>v\<^sub>D:reg\<^sub>H \<ge> 0 \<and> \<^bold>v\<^sub>D:reg\<^sub>H \<le> 7 \<and> \<^bold>v\<^sub>D:err\<^sub>H = 0)\<^sub>e)\<^sup><
-  \<turnstile>\<^sub>r
-  (((vu:\<^bold>v\<^sub>D:reg\<^sub>H\<^sup>> = (vu:\<^bold>v\<^sub>D:reg\<^sub>H\<^sup>< * 2)) \<or> (vu:\<^bold>v\<^sub>D:reg\<^sub>H\<^sup>> = ((vu:\<^bold>v\<^sub>D:reg\<^sub>H\<^sup>< * 2) + 1))) \<and> (vu:\<^bold>v\<^sub>D:err\<^sub>H\<^sup>> = 0))\<^sub>e
-"
-
-term "(L (Hv \<and> Sys1 (ST \<up> \<^bold>v\<^sub>D)) DBL) =(
-  (reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e
-  \<turnstile>\<^sub>r
-  (((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> (err\<^sub>H\<^sup>> = 0))\<^sub>e)
-"
-
-
-term "(Sys1 (ST \<up> \<^bold>v\<^sub>D))\<^sup><"
-
-
-term "(Lv \<and> Sys1 (ST \<up> \<^bold>v\<^sub>D))"
-
-term "L (Lv \<and> Sys1 (ST \<up> \<^bold>v\<^sub>D)) DBL2"
-
-term "(reg\<^sub>L \<ge> 0 \<and> reg\<^sub>L \<le> 15 \<and> err\<^sub>L = 0)\<^sub>e"
-
-term "((reg\<^sub>L\<^sup>> = (reg\<^sub>L\<^sup>< * 2) mod 16 \<and> err\<^sub>L\<^sup>> = 0) \<or> (reg\<^sub>L\<^sup>> \<ge> 0 \<and> reg\<^sub>L\<^sup>> \<le> 15 \<and> err\<^sub>L\<^sup>> = 1))\<^sub>e"
-
-
-lemma "L (Lv \<and> Sys1 (ST \<up> \<^bold>v\<^sub>D)) DBL2"
 
 end
