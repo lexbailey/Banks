@@ -241,7 +241,7 @@ of Banks's work. OK does not need to do anything, since we simply ignore the var
 This is safe to do because there is no mechanism to inspect or assign to ok\<^sub>v. No predicate could
 refer to ok\<^sub>v in an unhealthy way, because no predicate can refer to ok\<^sub>v at all.  *)
 definition OK :: "(_ des_vars_scheme \<Rightarrow> bool) \<Rightarrow> (_ des_vars_scheme \<Rightarrow> bool)"
-  where [banks_defs]: "OK = id"
+  where [banks_defs]: "OK V = (\<not> ok \<or> V)\<^sub>e"
 
 expr_constructor OK
 
@@ -273,20 +273,33 @@ definition to_viewed_design :: "('a des_vars_scheme) hrel \<Rightarrow> (('a, 'b
      v \<circ> (pair_map (\<lambda> a::(('a, 'b, 'c) viewed_system_scheme des_vars_scheme) . \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> a), \<dots> = (get\<^bsub>sys\<^esub> (get\<^bsub>\<^bold>v\<^sub>D\<^esub> a)) \<rparr>))
   )"
 
+term "((V \<down> \<^bold>v\<^sub>D\<^sup>2) \<up> sys\<^sup>2 \<up> \<^bold>v\<^sub>D\<^sup>2)"
+
+
 definition L\<^sub>D :: "(('a, 'b, 'c) viewed_system_scheme des_vars_ext \<Rightarrow> \<bool>) \<Rightarrow> 'a des_vars_scheme hrel \<Rightarrow> ('a, 'b, 'c) viewed_system_scheme des_vars_ext hrel"
   where [banks_defs]: "L\<^sub>D V P = (\<exists> (sys\<^sup><, sys\<^sup>>, vu\<^sup><) \<Zspot> (\<Delta> (V \<down> \<^bold>v\<^sub>D) \<and> (P \<down> \<^bold>v\<^sub>D\<^sup>2) \<up> sys\<^sup>2 ))\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2"
 
+
 definition \<Delta>\<^sub>D :: "(('a, 'b, 'c) viewed_system_scheme des_vars_scheme \<Rightarrow> bool) \<Rightarrow> _ \<Rightarrow> bool"
-  where [banks_defs]: "\<Delta>\<^sub>D V = (\<Delta> V \<and> (ok\<^sup>< \<longrightarrow> ok\<^sup>>))\<^sub>e"
+  where [banks_defs]: "\<Delta>\<^sub>D = \<Delta>"
 
 expr_constructor \<Delta>\<^sub>D
 
 term "to_viewed_design P"
 
-expr_constructor "to_viewed_design"
+lemma view_des_conj_split: "to_viewed_design (a \<and> b) = (to_viewed_design a \<and> to_viewed_design b)"
+  by (pred_auto add: to_viewed_design_def)
 
+lemma view_des_disj_split: "to_viewed_design (a \<or> b) = (to_viewed_design a \<or> to_viewed_design b)"
+  by (pred_auto add: to_viewed_design_def)
+
+expr_constructor "to_viewed_design"
+(*
 definition L2\<^sub>D :: "(('a, 'b, 'c) viewed_system_scheme des_vars_ext \<Rightarrow> \<bool>) \<Rightarrow> 'a des_vars_scheme hrel \<Rightarrow> ('a, 'b, 'c) viewed_system_scheme des_vars_ext hrel"
-  where [banks_defs]: "L2\<^sub>D V P = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> ((\<Delta>\<^sub>D V) \<and> (to_viewed_design P)))\<^sub>e"
+  where [banks_defs]: "L2\<^sub>D V P = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> ((\<Delta> V) \<and> (to_viewed_design P)))\<^sub>e"
+*)
+definition L2\<^sub>D :: "(('a, 'b, 'c) viewed_system_scheme des_vars_ext \<Rightarrow> \<bool>) \<Rightarrow> 'a des_vars_scheme hrel \<Rightarrow> ('a, 'b, 'c) viewed_system_scheme des_vars_ext hrel"
+  where [banks_defs]: "L2\<^sub>D V P = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> ((\<Delta> V) \<and> (to_viewed_design P)))\<^sub>e"
 
 lemma "(pre' \<turnstile>\<^sub>r post') = (($ok)\<^sup>< \<and> \<lceil>pre'\<rceil>\<^sub>D \<longrightarrow> ($ok)\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)\<^sub>e"
   by (simp only: rdesign_def design_def)
@@ -296,10 +309,64 @@ term Ex
 definition Ln where "Ln aview pred = (\<lambda> avu' . (\<exists> asys asys' avu . aview (asys, avu) \<and> aview (avu, avu') \<and> (pred (asys, asys'))))"
 definition design where "design apre apost = (\<lambda> ((aok::bool), aok', asys, asys') . aok \<and> (apre asys) \<longrightarrow> aok' \<and> (apost (asys, asys')))"
 
+lemma "mwb_lens ok"
+  by simp
+
+lemma
+  assumes "V is VH1"
+  shows "V = ((\<exists> (sys) \<Zspot> V) \<longrightarrow> V)"
+  using assms apply (pred_auto add: banks_defs)
+
+
+lemma
+  fixes V :: "('a, 'b, 'c) viewed_system_scheme des_vars_scheme \<Rightarrow> \<bool>"
+  fixes "aok" "aok'" "a" "b"
+  assumes "V is VHD"
+  assumes "$ok \<sharp> V"
+  shows "
+  (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (\<not>ok\<^sup><) \<or> to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D))))) (\<lparr>ok\<^sub>v = aok, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>)
+    =
+  (to_viewed_design (\<not>ok\<^sup><) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> ( to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D)))))) (\<lparr>ok\<^sub>v = aok, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>)
+  "
+proof (cases aok)
+  case True
+  then show ?thesis by (pred_auto add: banks_defs)
+next
+  case False
+  then show ?thesis proof simp
+    have "((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (\<not>ok\<^sup><) \<or> to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D))))) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>) =
+      (to_viewed_design (\<not>ok\<^sup><) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> ( to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D)))))) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>))
+      =
+      ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (true) \<or> to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D))))) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>) =
+      (to_viewed_design (true) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> ( to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D)))))) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>))"
+      by (pred_auto add: banks_defs)
+    also have "... =
+      ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (\<Delta> V)) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>)
+      =
+      (to_viewed_design (true)) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>))"
+      by (pred_auto add: banks_defs)
+    also have "... =
+      ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (\<Delta> V)) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>)
+      =
+      (true) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>))"
+      by (pred_auto add: banks_defs)
+    also have "... =
+      (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (\<Delta> V)) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>)"
+      by (pred_auto add: banks_defs)
+    then show "((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (\<not>ok\<^sup><) \<or> to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D))))) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>) =
+      (to_viewed_design (\<not>ok\<^sup><) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> ( to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D)))))) (\<lparr>ok\<^sub>v = False, \<dots> = a\<rparr>, \<lparr>ok\<^sub>v = aok', \<dots> = b\<rparr>))"
+      using assms apply (pred_auto add: banks_defs)
+                     apply (simp add: ex_expr_def split_beta subst_app_def subst_ext_def)+
+      
+      
+  qed
+qed
 
 
 lemma view_local_design [banks_defs] :
-  assumes "(V::('a, 'b, 'c) viewed_system_scheme des_vars_scheme \<Rightarrow> \<bool>) is VHD"
+  fixes V :: "('a, 'b, 'c) viewed_system_scheme des_vars_scheme \<Rightarrow> \<bool>"
+  assumes "V is VHD"
+  assumes "$ok \<sharp> V"
   assumes "(pre' \<turnstile>\<^sub>r post') is H1"
   assumes "(pre' \<turnstile>\<^sub>r post') is H2"
   assumes "(pre' \<turnstile>\<^sub>r post') is H3"
@@ -310,33 +377,134 @@ lemma view_local_design [banks_defs] :
     ((\<not> (L (V \<down> \<^bold>v\<^sub>D) (\<not> (pre')))) \<turnstile>\<^sub>r (L (V \<down> \<^bold>v\<^sub>D) (post')))
   "
 proof -
-  have "(L2\<^sub>D V (pre' \<turnstile>\<^sub>r post')) = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta>\<^sub>D V) \<and> (to_viewed_design (pre' \<turnstile>\<^sub>r post')))))\<^sub>e"
+  have "(L2\<^sub>D V (pre' \<turnstile>\<^sub>r post')) = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (pre' \<turnstile>\<^sub>r post')))))\<^sub>e"
     by (simp only: L2\<^sub>D_def)
-  also have "... = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta>\<^sub>D V) \<and> (to_viewed_design (ok\<^sup>< \<and> \<lceil>pre'\<rceil>\<^sub>D \<longrightarrow> ok\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)\<^sub>e))))\<^sub>e"
-    by (simp add: rdesign_def design_def)
-  also have "... = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta>\<^sub>D V) \<and> (to_viewed_design (\<not>ok\<^sup>< \<or> \<not>\<lceil>pre'\<rceil>\<^sub>D \<or> ok\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)\<^sub>e))))\<^sub>e"
+  also have "... = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (ok\<^sup>< \<and> \<lceil>pre'\<rceil>\<^sub>D \<longrightarrow> ok\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)\<^sub>e))))\<^sub>e"
+    by (pred_simp)
+  also have "... = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (\<not>ok\<^sup>< \<or> \<not>\<lceil>pre'\<rceil>\<^sub>D \<or> ok\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)\<^sub>e))))\<^sub>e"
     by (simp only: imp_conv_disj de_Morgan_conj disj_assoc)
   also have "... =
     (
-      (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta>\<^sub>D V) \<and> (to_viewed_design (\<not>ok\<^sup>< \<or> \<not>\<lceil>pre'\<rceil>\<^sub>D)))))
+      (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (\<not>ok\<^sup>< \<or> \<not>\<lceil>pre'\<rceil>\<^sub>D)))))
     \<or>
-      (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta>\<^sub>D V) \<and> (to_viewed_design (ok\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)))))
+      (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (ok\<^sup>> \<and> \<lceil>post'\<rceil>\<^sub>D)))))
     )\<^sub>e
     "
     by (pred_auto add: banks_defs)
   also have "... =
     (
-      (\<not>ok\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta>\<^sub>D V) \<and> (to_viewed_design ( \<not>\<lceil>pre'\<rceil>\<^sub>D))))))
+      (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (\<not>ok\<^sup><) \<or> to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D)))))
     \<or>
-      (ok\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta>\<^sub>D V) \<and> (to_viewed_design (\<lceil>post'\<rceil>\<^sub>D))))))
+      (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (ok\<^sup>>) \<and> to_viewed_design (\<lceil>post'\<rceil>\<^sub>D)))))
     )\<^sub>e
     "
     using assms
-    apply (pred_auto add: banks_defs)
-           apply meson
-          apply blast
-    nitpick
+    by (pred_auto add: banks_defs)
+  also have "... =
+    (
+      (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (\<not>ok\<^sup><) \<or> to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D)))))
+    \<or>
+      (to_viewed_design (ok\<^sup>>) \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and>  to_viewed_design (\<lceil>post'\<rceil>\<^sub>D)))))
+    )\<^sub>e
+    "
+    using assms
+    by (pred_auto add: banks_defs)
+  also have "... =
+    (
+      (to_viewed_design (\<not>ok\<^sup><) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> ( to_viewed_design (\<not>\<lceil>pre'\<rceil>\<^sub>D))))))
+    \<or>
+      (to_viewed_design (ok\<^sup>>) \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and>  to_viewed_design (\<lceil>post'\<rceil>\<^sub>D)))))
+    )\<^sub>e
+    "
+    using assms
+    by (pred_auto add: banks_defs)
 
+
+    thm HOL.ex_simps
+
+lemma foo:
+  fixes V :: "('a, 'b, 'c) viewed_system_scheme des_vars_scheme \<Rightarrow> \<bool>"
+  assumes "V is VHD"
+  assumes "($ok) \<sharp> V"
+  shows "($ok\<^sup><) \<sharp> (\<Delta> V)"
+  using assms apply (pred_auto add: \<Delta>_def)
+  apply blast
+  by blast
+
+
+lemma bar:
+  fixes V :: "('a, 'b, 'c) viewed_system_scheme des_vars_scheme \<Rightarrow> \<bool>"
+  fixes aaa :: "('a, 'b, 'c) viewed_system_scheme des_vars_ext hrel"
+  assumes "V is VHD"
+  assumes "$(\<^bold>v\<^sub>D:vu)\<^sup>2 \<sharp> aaa"
+  assumes "$(ok)\<^sup>2 \<sharp> aaa"  
+  (*shows "(\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (\<Delta> V) \<and> (aaa)) = ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> aaa) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (\<Delta> V)))"*)
+  shows "(\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> (\<Delta> V) \<and> (aaa)) = ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> aaa) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> (\<Delta> V)))"
+  using assms apply (pred_auto add: banks_defs)
+  nitpick
+
+term "\<lceil>pre'\<rceil>\<^sub>D"
+term "pre' \<up> \<^bold>v\<^sub>D"
+
+lemma
+  fixes V :: "('e, 'f, 'g) viewed_system_scheme \<Rightarrow> \<bool>"
+  assumes "V is VH1"
+  shows "(\<exists> (sys) \<Zspot> V) = V"
+  apply (pred_auto add: assms banks_defs)
+
+lemma
+  fixes V :: "('a, 'b, 'c) viewed_system_scheme des_vars_scheme \<Rightarrow> \<bool>"
+  assumes "V is VHD"
+  assumes "($ok) \<sharp> V"
+  assumes "mwb_lens ok"
+  shows "
+(\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (\<Delta> V) \<and> (\<not>ok\<^sup>< \<or> \<not>\<lceil>pre'\<rceil>\<^sub>D))
+=
+ ((\<not>ok\<^sup><) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> \<Delta> V \<and> \<not>\<lceil>pre'\<rceil>\<^sub>D))
+"
+proof -
+  have "(\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (\<Delta> V) \<and> (\<not>ok\<^sup>< \<or> \<not>\<lceil>pre'\<rceil>\<^sub>D)) = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (\<not>ok\<^sup><)) \<or> ((\<Delta> V) \<and> \<not>\<lceil>pre'\<rceil>\<^sub>D)))"
+    by (pred_auto add: banks_defs)
+  then have "... = disj_pred (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> ((\<Delta> V) \<and> (\<not>ok\<^sup><))) (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> \<not>\<lceil>pre'\<rceil>\<^sub>D)))"
+    by (pred_auto)
+  then have "... = disj_pred ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> ((\<Delta> V)))  \<and> (\<not>ok\<^sup><)) (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> \<not>\<lceil>pre'\<rceil>\<^sub>D)))"
+    by pred_auto
+  then have "... = disj_pred ((\<not>ok\<^sup><) \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> ((\<Delta> V)))) (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> \<not>\<lceil>pre'\<rceil>\<^sub>D)))"
+    by pred_auto
+  then have "... = disj_pred ((\<not>ok\<^sup><) \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> ((\<Delta> V))))
+  ((
+    \<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> ((\<not>\<lceil>pre'\<rceil>\<^sub>D))
+  )
+\<and>(
+    \<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V)))
+  )
+  )
+  "
+    apply (pred_auto add: assms)
+    nitpick
+  
+  using assms
+  apply (pred_auto add: pred_ex_simps banks_defs foo)
+
+(a \<and> b) \<or> c
+
+
+  
+
+lemma
+  fixes V :: "('a, 'b, 'c) viewed_system_scheme des_vars_scheme \<Rightarrow> \<bool>"
+  assumes "V is VHD"
+  assumes "($ok) \<sharp> V"
+  assumes "mwb_lens ok"
+  shows "
+(\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design (\<not>ok\<^sup>> \<and> \<not>\<lceil>pre'\<rceil>\<^sub>D)))))
+=
+ ((to_viewed_design (\<not>ok\<^sup>>)) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>, \<^bold>v\<^sub>D:vu\<^sup><) \<Zspot> (((\<Delta> V) \<and> (to_viewed_design ( \<not>\<lceil>pre'\<rceil>\<^sub>D))))))
+"
+  using assms
+  apply (pred_auto add: pred_ex_simps banks_defs foo)
+  apply blast
+  
 
 definition a\<^sub>1 where "a\<^sub>1 = (12::nat)"
 definition b\<^sub>1 where "b\<^sub>1 = (17::nat)"

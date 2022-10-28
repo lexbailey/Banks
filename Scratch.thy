@@ -24,11 +24,13 @@ definition vh1 where "vh1 aview =
     ) then aview else (\<lambda> a. True)
   )"
 
-definition no_ok where "no_ok aview = (if (\<exists> a.
+definition no_ok where "no_ok aview = (\<not> (\<exists> a.
       (aview a \<noteq> aview ((fst a)\<lparr>ok:=\<not> ok (fst a)\<rparr>, (snd a)))
       \<or>
       (aview a \<noteq> aview ((fst a), (snd a)\<lparr>ok:=\<not> ok (snd a)\<rparr>))
-    ) then (\<lambda> a. True) else aview)"
+      \<or>
+      (aview a \<noteq> aview ((fst a)\<lparr>ok:=\<not>ok(fst a)\<rparr>, (snd a)\<lparr>ok:=\<not> ok (snd a)\<rparr>))
+    ))"
 
 definition design :: "(vpair \<Rightarrow> bool) \<Rightarrow> (vpair \<Rightarrow> bool) \<Rightarrow> vpair \<Rightarrow> bool"
   where "design apre apost = (\<lambda> a . (ok (fst a)) \<and> (apre a) \<longrightarrow> (ok (snd a)) \<and> (apost a))"
@@ -38,7 +40,7 @@ definition notp where "notp p a = (\<not> (p a))"
 lemma
   fixes "apre" "apost" "v"
   assumes "vh1 v = v"
-  assumes "no_ok v = v"
+  assumes "no_ok v"
   shows "Ln v (design apre apost) = (design (notp (Ln v (notp apre))) (Ln v apost))"
 proof -
   have "Ln v (design apre apost) = (\<lambda> a .
@@ -95,8 +97,12 @@ proof -
       ))
     )"
     using assms
-    
-    
+    apply (simp only: HOL.ex_simps)
+    apply (simp)
+
+
+
+    thm HOL.ex_simps
   
 
 end
