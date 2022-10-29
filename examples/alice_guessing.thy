@@ -76,8 +76,6 @@ lemma
       (g\<^sup>< = 7 \<and> r\<^sup>> < 0 \<and> n\<^sup>< \<ge> 8 \<and> n\<^sup>< \<le> 10)\<^sub>e
     )
   )"
-  apply (expr_simp_banks add: Alice_def Guess0_def)
-  by auto
-
+  by (pred_auto_banks add: Alice_def Guess0_def)
 
 end
