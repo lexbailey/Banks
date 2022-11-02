@@ -47,7 +47,13 @@ Consider an example where the register stores the value 60
 Here is an observation on the final state, with this value
 *)
 
-definition \<Phi> where "\<Phi> = (reg = 60 \<and> err = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>>"
+definition \<Phi> where "\<Phi> = (reg = 60 \<and> err = 0)\<^sub>e"
+
+lemma "Hv is VHD"
+  by (pred_auto_banks add: Hv_def)
+
+lemma "Lv is VHD"
+  by (pred_auto_banks add: Lv_def)
 
 (*
   Hv and Lv extract the high nibble and low nibble, respectively
@@ -56,21 +62,28 @@ definition \<Phi> where "\<Phi> = (reg = 60 \<and> err = 0)\<^sub>e \<up> \<^bol
       LLLL = 1100(b2) = 12(b10)
 *)
 
-lemma "((L2\<^sub>D Hv \<Phi>) \<down> \<^bold>v\<^sub>D\<^sup>2 \<down> vu\<^sup>>) = ((reg\<^sub>H = 3 \<and> err\<^sub>H = 0)\<^sub>e)"
-  apply (pred_auto_banks add: Hv_def \<Phi>_def)
+term "\<Phi> \<up> \<^bold>v\<^sub>D\<^sup>>"
 
-lemma "((L2\<^sub>D Lv \<Phi>) \<down> \<^bold>v\<^sub>D\<^sup>2 \<down> vu\<^sup>>) = ((reg\<^sub>L = 12 \<and> err\<^sub>L = 0)\<^sub>e)"
+term "L\<^sub>D Hv"
+
+term "((L\<^sub>D Hv (\<Phi> \<up> \<^bold>v\<^sub>D\<^sup>>)) \<down> \<^bold>v\<^sub>D\<^sup>2 \<down> vu\<^sup>>)"
+
+lemma "((L\<^sub>D Hv (\<Phi>  \<up> \<^bold>v\<^sub>D\<^sup>>)) \<down> \<^bold>v\<^sub>D\<^sup>2 \<down> vu\<^sup>>) = (reg\<^sub>H = 3 \<and> err\<^sub>H = 0)\<^sub>e"
+  apply (pred_auto_banks add: Hv_def \<Phi>_def)
+  try
+
+lemma "((L\<^sub>D Lv \<Phi>) \<down> \<^bold>v\<^sub>D\<^sup>2 \<down> vu\<^sup>>) = ((reg\<^sub>L = 12 \<and> err\<^sub>L = 0)\<^sub>e)"
   by (pred_auto_banks add: Lv_def \<Phi>_def)
 
 lemma "
-  (L2\<^sub>D (Hv \<and> (ST \<up> sys \<up> \<^bold>v\<^sub>D)) (DBL))
+  (L\<^sub>D (Hv \<and> (ST \<up> sys \<up> \<^bold>v\<^sub>D)) (DBL))
   =
   (((reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e \<up> vu) \<turnstile>\<^sub>r ((((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e  \<up> vu))
   "
   by (pred_auto_banks)
 
 lemma "
-  (L2\<^sub>D (Lv \<and> (ST \<up> sys \<up> \<^bold>v\<^sub>D)) (DBL)) = true"
+  (L\<^sub>D (Lv \<and> (ST \<up> sys \<up> \<^bold>v\<^sub>D)) (DBL)) = true"
   apply (pred_auto_banks add: DBL_def)
 
 (* DBL2 doubles the number, if it is low enough to double without overflow, but unlike DBL, it
