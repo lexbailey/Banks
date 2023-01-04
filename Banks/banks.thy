@@ -207,10 +207,12 @@ definition infer
     where [banks_defs]: "infer P V \<psi> = (P \<and> (Not (G (V) (Not \<circ> \<psi>))))\<^sub>e"
 
 expr_constructor infer
-  
-lemma "V is VH3 \<longrightarrow> infer P V \<psi> = (P \<and> (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> \<psi>))\<^sub>e"
+
+lemma
+  assumes "V is VH3"
+  shows "infer P V \<psi> = (P \<and> (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> \<psi>))\<^sub>e"
   by (expr_simp add: infer_def G_def VH3_def \<Delta>_def)
-    
+
 
 (* Instantiate default for views *)
 instantiation viewed_system_ext :: (default, default, default) default
@@ -259,6 +261,11 @@ definition view_des_cond :: "(('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<
 definition to_viewed_design :: "('a des_vars_scheme) hrel \<Rightarrow> (('a, 'b, 'c) viewed_system_scheme des_vars_scheme) hrel"
   where [banks_defs]: "to_viewed_design v = (
      v \<circ> (pair_map (\<lambda> a::(('a, 'b, 'c) viewed_system_scheme des_vars_scheme) . \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> a), \<dots> = (get\<^bsub>sys\<^esub> (get\<^bsub>\<^bold>v\<^sub>D\<^esub> a)) \<rparr>))
+  )"
+
+definition as_design_view :: "('a des_vars_scheme) hrel \<Rightarrow> (('b, 'a, 'c) viewed_system_scheme des_vars_scheme) hrel"
+  where [banks_defs]: "as_design_view v = (
+     v \<circ> (pair_map (\<lambda> a::(('b, 'a, 'c) viewed_system_scheme des_vars_scheme) . \<lparr> ok\<^sub>v = (get\<^bsub>ok\<^esub> a), \<dots> = (get\<^bsub>vu\<^esub> (get\<^bsub>\<^bold>v\<^sub>D\<^esub> a)) \<rparr>))
   )"
 
 lemma view_des_conj_split: "to_viewed_design (a \<and> b) = (to_viewed_design a \<and> to_viewed_design b)"

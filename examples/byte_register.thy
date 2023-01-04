@@ -33,11 +33,11 @@ definition DBL
 
 (* A view of the high nibble *)
 definition Hv
-  where "Hv = OK ((vu:reg\<^sub>H = floor (sys:reg / 16) \<and> vu:err\<^sub>H = sys:err)\<^sub>e \<up> \<^bold>v\<^sub>D)"
+  where "Hv = OK (((vu:reg\<^sub>H = floor (sys:reg / 16)) \<and> (vu:err\<^sub>H = sys:err))\<^sub>e \<up> \<^bold>v\<^sub>D)"
 
 (* A view of the low nibble *)
 definition Lv
-  where "Lv = OK ((vu:reg\<^sub>L = sys:reg mod 16 \<and> vu:err\<^sub>L = sys:err)\<^sub>e \<up> \<^bold>v\<^sub>D)"
+  where "Lv = OK (((vu:reg\<^sub>L = sys:reg mod 16) \<and> (vu:err\<^sub>L = sys:err))\<^sub>e \<up> \<^bold>v\<^sub>D)"
 
 (*
 Consider an example where the register stores the value 60
@@ -62,29 +62,29 @@ lemma "Lv is VHD"
       LLLL = 1100(b2) = 12(b10)
 *)
 
-term "\<Phi> \<up> \<^bold>v\<^sub>D\<^sup>>"
+lemma "(((L (Hv \<down> \<^bold>v\<^sub>D) (\<Delta> \<Phi>))) \<down> vu\<^sup>2) = (reg\<^sub>H\<^sup>> = 3 \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e"
+  by (pred_auto_banks add: Hv_def \<Phi>_def)
 
-term "L\<^sub>D Hv"
-
-term "((L\<^sub>D Hv (\<Phi> \<up> \<^bold>v\<^sub>D\<^sup>>)) \<down> \<^bold>v\<^sub>D\<^sup>2 \<down> vu\<^sup>>)"
-
-lemma "((L\<^sub>D Hv (\<Phi>  \<up> \<^bold>v\<^sub>D\<^sup>>)) \<down> \<^bold>v\<^sub>D\<^sup>2 \<down> vu\<^sup>>) = (reg\<^sub>H = 3 \<and> err\<^sub>H = 0)\<^sub>e"
-  apply (pred_auto_banks add: Hv_def \<Phi>_def)
-  try
-
-lemma "((L\<^sub>D Lv \<Phi>) \<down> \<^bold>v\<^sub>D\<^sup>2 \<down> vu\<^sup>>) = ((reg\<^sub>L = 12 \<and> err\<^sub>L = 0)\<^sub>e)"
+lemma "(((L (Lv \<down> \<^bold>v\<^sub>D) (\<Delta> \<Phi>))) \<down> vu\<^sup>2) = (reg\<^sub>L\<^sup>> = 12 \<and> err\<^sub>L\<^sup>> = 0)\<^sub>e"
   by (pred_auto_banks add: Lv_def \<Phi>_def)
 
+(* TODO is this right? *)
 lemma "
   (L\<^sub>D (Hv \<and> (ST \<up> sys \<up> \<^bold>v\<^sub>D)) (DBL))
   =
-  (((reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e \<up> vu) \<turnstile>\<^sub>r ((((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e  \<up> vu))
+  (as_design_view(
+    ((reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e)
+     \<turnstile>\<^sub>r
+     ((((reg\<^sub>H\<^sup>> = (reg\<^sub>H\<^sup>< * 2)) \<or> (reg\<^sub>H\<^sup>> = ((reg\<^sub>H\<^sup>< * 2) + 1))) \<and> err\<^sub>H\<^sup>> = 0)\<^sub>e)
+  ))
   "
-  by (pred_auto_banks)
+  apply (pred_auto_banks add: Hv_def DBL_def ST_def)
+  sorry
 
-lemma "
-  (L\<^sub>D (Lv \<and> (ST \<up> sys \<up> \<^bold>v\<^sub>D)) (DBL)) = true"
-  apply (pred_auto_banks add: DBL_def)
+lemma "(L\<^sub>D (Lv \<and> (ST \<up> sys \<up> \<^bold>v\<^sub>D)) (DBL)) = true"
+  apply (pred_auto_banks add: DBL_def Lv_def ST_def)
+  by (metis zero_neq_one)
+  
 
 (* DBL2 doubles the number, if it is low enough to double without overflow, but unlike DBL, it
 explicitly defines the behaviour in the overflow case. If overflow is detected, then the err bit is
