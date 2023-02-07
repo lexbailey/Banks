@@ -48,15 +48,23 @@ definition Loc2 where "Loc2 = L V2 ExSys"
 
 lemma localise_v2 : "Loc2 = (c2 \<ge> 5 \<and> c2 \<le> 10)\<^sub>e \<up> vu\<^sup>>"
   apply (pred_auto_banks add: Loc2_def V2_def ExSys_def)
-  by presburger
+  by presburger+
 
-definition Loc3 where "Loc3 = L V3 ExSys"
+definition Loc3 where "Loc3 = (L V3 ExSys)"
 
 lemma localise_v3 : "Loc3 = (
     (d3 \<ge> 0 \<and> d3 < 5 \<and> e3 = 0)
    \<or>(d3 \<ge> 5 \<and> d3 \<le> 10 \<and> e3 = 1)
   )\<^sub>e \<up> vu\<^sup>>"
   apply (pred_auto_banks add: Loc3_def V3_def ExSys_def)
+  tr
+
+lemma localise_v3 : "Loc3 = (
+    (d3 \<ge> 0 \<and> d3 < 5 \<and> e3 = 0)
+   \<or>(d3 \<ge> 5 \<and> d3 \<le> 10 \<and> e3 = 1)
+  )\<^sub>e \<up> vu\<^sup>>"
+  apply (pred_auto_banks add: Loc3_def V3_def ExSys_def)
+  tr
   by presburger+
 
 lemma "(G V1 Loc1) =  (x \<ge> 0 \<and> y \<ge> 0 \<and> x + y = 10)\<^sub>e \<up> sys\<^sup>>"
