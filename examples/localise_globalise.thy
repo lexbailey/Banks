@@ -59,15 +59,16 @@ lemma localise_v3 : "Loc3 = \<Delta>((
   apply (pred_auto_banks add: Loc3_def V3_def ExSys_def)
   by presburger+
   
-lemma "(G V1 Loc1) =  \<Delta>((x \<ge> 0 \<and> y \<ge> 0 \<and> x + y = 10)\<^sub>e \<up> sys)"
+lemma "(G V1 Loc1) = \<Delta>((x \<ge> 0 \<and> y \<ge> 0 \<and> x + y = 10)\<^sub>e \<up> sys)"
   by (pred_auto_banks add: Loc1_def V1_def ExSys_def)
 
-lemma "(G V2 Loc2) =  \<Delta>(((max x y \<ge> 5) \<and> (max x y \<le> 10))\<^sub>e  \<up> sys)"
+lemma "(G V2 Loc2) = \<Delta>(((max x y \<ge> 5) \<and> (max x y \<le> 10))\<^sub>e  \<up> sys)"
   apply (pred_auto_banks add: Loc2_def V2_def ExSys_def)
   by presburger
 
-lemma "(G V3 Loc3) =  \<Delta>(( if x < y then (x \<ge> 0 \<and> x < 5) else (x \<ge> 5 \<and> x \<le> 10))\<^sub>e  \<up> sys)"
-  apply (pred_auto_banks add: Loc3_def V3_def ExSys_def)
+lemma "(G V3 Loc3) = \<Delta>(( if x < y then (x \<ge> 0 \<and> x < 5) else (x \<ge> 5 \<and> x \<le> 10))\<^sub>e  \<up> sys)"
+  apply (expr_simp_banks add: Loc3_def V3_def ExSys_def)
+  apply (pred_simp)
   by presburger+
 
 end
