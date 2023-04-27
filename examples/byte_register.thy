@@ -39,6 +39,12 @@ definition DBL
 (*  where "DBL = (reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e \<turnstile>\<^sub>r (reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e"*)
   where "DBL = (reg \<ge> 0 \<and> reg \<le> 127 \<and> err = 0) \<turnstile>\<^sub>n (reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e"
 
+lemma DBL_r_design: "DBL = (reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e \<turnstile>\<^sub>r (reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e"
+  by (expr_simp add: DBL_def)
+
+lemma DBL_design: "DBL = ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2) \<turnstile> ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2)"
+  by (pred_simp add: DBL_def DBL_r_design)
+
 (* A view of the high nibble *)
 definition Hv
   where "Hv = OK (((vu:reg\<^sub>H = (ucast (drop_bit 4 sys:reg))) \<and> (vu:err\<^sub>H = sys:err))\<^sub>e \<up> \<^bold>v\<^sub>D)"
@@ -52,6 +58,12 @@ lemma hv_is_vhd: "Hv is VHD"
   by (pred_auto_banks add: Hv_def)
 
 lemma lv_is_vhd: "Lv is VHD"
+  by (pred_auto_banks add: Lv_def)
+
+lemma ok_free_hv: "$ok \<sharp> Hv"
+  by (pred_auto_banks add: Hv_def)
+
+lemma ok_free_lv: "$ok \<sharp> Lv"
   by (pred_auto_banks add: Lv_def)
 
 (*
@@ -80,17 +92,87 @@ lemma "(((L (Lv \<down> \<^bold>v\<^sub>D) (\<Delta> \<Phi>))) \<down> vu\<^sup>
 definition Loc_H_DBL where "Loc_H_DBL = (L\<^sub>D (Hv) (DBL))"
 definition Loc_L_DBL where "Loc_L_DBL = (L\<^sub>D (Lv) (DBL))"
 
+
+(* this might turn out to be useful *)
 lemma drop_word_lt_div: "(r :: 8 word) \<le> a \<longrightarrow> (drop_bit k r) \<le> a div 2^k"
   by (simp add: drop_bit_eq_div word_le_nat_alt unat_div_distrib div_le_mono)
+
+
+term "(L\<^sub>D V (pre' \<turnstile>\<^sub>r post')) = ((\<not>L\<^sub>D V (\<not>\<lceil>pre'\<rceil>\<^sub>D))) \<turnstile> ((L\<^sub>D V (\<lceil>post'\<rceil>\<^sub>D)))"
+
+term "
+(reg \<ge> 0 \<and> reg \<le> 127 \<and> err = 0)
+
+ \<turnstile>\<^sub>n (reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e"
+
+term "(L\<^sub>D V ((pre' \<up> \<^bold>v\<^sub>D\<^sup>2) \<turnstile> (post' \<up> \<^bold>v\<^sub>D\<^sup>2))) = ((\<not>L\<^sub>D V (\<not> (pre'  \<up> \<^bold>v\<^sub>D\<^sup>2)))) \<turnstile> ((L\<^sub>D V (post' \<up> \<^bold>v\<^sub>D\<^sup>2)))"
+
+term  "DBL = ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2) \<turnstile> ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2)"
+
+
+lemma "Loc_L_DBL = ((L\<^sub>D (Lv) (((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2) \<turnstile> ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2))))"
+  by (pred_auto_banks add: Loc_L_DBL_def DBL_def)
+
+(* Question: why is the dash after "proof" required? *)
+(*
+lemma "Loc_L_DBL = ((\<not>L\<^sub>D (Lv) (\<not> ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2)))) \<turnstile> ((L\<^sub>D (Lv) ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2)))"
+proof -
+  have  "Loc_L_DBL = (L\<^sub>D (Lv) (((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2) \<turnstile> ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2)))"
+    by (pred_auto_banks add: Loc_L_DBL_def DBL_def)
+  also have "... = ((\<not>L\<^sub>D (Lv) (\<not> ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2)))) \<turnstile> ((L\<^sub>D (Lv) ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2)))"
+    apply (subst view_local_lifted_design, auto)
+    apply (subst lv_is_vhd, auto)
+    apply (subst ok_free_lv, auto)
+    done
+  finally show ?thesis.
+qed
+*)
+
+lemma loc_l_dbl_simp: "Loc_L_DBL = ((\<not>L\<^sub>D (Lv) (\<not> ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2)))) \<turnstile> ((L\<^sub>D (Lv) ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2)))"
+  by (pred_auto_banks add: Lv_def DBL_def Loc_L_DBL_def)
+
+lemma "Loc_H_DBL = ((\<not>L\<^sub>D (Hv) (\<not> ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2)))) \<turnstile> ((L\<^sub>D (Hv) ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2)))"
+  by (pred_auto_banks add: Hv_def DBL_def Loc_H_DBL_def)
+
+lemma "L\<^sub>D (Lv) (\<not> ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2)) = true"
+  apply (pred_auto_banks add: Lv_def DBL_def Loc_L_DBL_def)
+  apply (unat_arith)
+  apply simp
+  apply auto
+  try
+
+lemma "Loc_L_DBL = true"
+  apply (pred_auto_banks add: Lv_def DBL_def Loc_L_DBL_def)
+  nitpick
+  
+
+term "((\<not>L\<^sub>D (Hv) (\<not> ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2))))"
+
+lemma "Loc_H_DBL = (((vu:reg\<^sub>H\<^sup>< \<ge> 0 \<and> vu:reg\<^sub>H\<^sup>< \<le> 7 \<and> vu:err\<^sub>H\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2)) \<turnstile> (((((vu:reg\<^sub>H\<^sup>> = vu:reg\<^sub>H\<^sup>< * 2) \<or> (vu:reg\<^sub>H\<^sup>> = (vu:reg\<^sub>H\<^sup>< * 2) + 1)) \<and> vu:err\<^sub>H\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2))"
+  apply (pred_auto_banks add: Hv_def DBL_def Loc_H_DBL_def)
+
+
+
+lemma "Loc_L_DBL =
+
+ ((\<not>L\<^sub>D Lv (\<not>(reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e)))
+
+ \<turnstile> ((L\<^sub>D Lv ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e)))"
+
+
+
+
+
+
+
 
 term "pre\<^sub>D(Loc_H_DBL)"
 
 lemma "pre\<^sub>D(Loc_H_DBL) = true"
-  apply (subst Loc_H_DBL_def)
-  apply (subst pre_design_def)
-  apply (subst banks_defs Hv_def DBL_def)+
-  apply (pred_simp add: banks_defs)
-  apply pred_auto
+  by (pred_simp add: Loc_H_DBL_def banks_defs)
+
+lemma "Loc_H_DBL = true"
+  by (pred_simp add: Loc_H_DBL_def banks_defs)
 
 (*lemma "pre\<^sub>D(Loc_H_DBL) = \<Delta> ((reg\<^sub>H \<ge> 0 \<and> reg\<^sub>H \<le> 7 \<and> err\<^sub>H = 0)\<^sub>e \<up> vu)"*)
 lemma "(pre\<^sub>D(Loc_H_DBL) \<down> vu\<^sup>2) = ((reg\<^sub>H\<^sup>< \<ge> 0 \<and> reg\<^sub>H\<^sup>< \<le> 7 \<and> err\<^sub>H\<^sup>< = 0)\<^sub>e)"
@@ -179,10 +261,10 @@ lemma "
 
 term pre_design
 
-lemma loc_l_dbl_pre_false: "(pre\<^sub>D(LocLDBL)) = false"
-  apply (subst LocLDBL_def, subst pre_design_def, subst L\<^sub>D_def)
+lemma loc_l_dbl_pre_false: "(pre\<^sub>D(Loc_L_DBL)) = false"
+  apply (subst Loc_L_DBL_def, subst pre_design_def, subst L\<^sub>D_def)
   apply (pred_auto_banks)
-  apply (pred_auto_banks add: DBL_def Lv_def LocLDBL_def)
+  apply (pred_auto_banks add: DBL_def Lv_def Loc_L_DBL_def)
 
 lemma "LocLDBL = true"
 proof -
