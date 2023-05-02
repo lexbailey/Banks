@@ -7,7 +7,7 @@ jobs:
       - run: sudo apt-get install -y moreutils
       - uses: actions/checkout@v3
       - run: ./ci_fixer
-      - uses: lexbailey/isabelle-theory-build-github-action@v4
+      - uses: lexbailey/isabelle-theory-build-github-action@main
         with:
           isabelle-version: '2021-1'
           custom-isabelle-url: 'https://github.com/lexbailey/itrees_isabelle_fork/archive/refs/heads/itrees_utp.zip'
