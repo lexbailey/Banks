@@ -116,19 +116,22 @@ lemma "Loc_L_DBL = true"
 
 (* TODO get H working *)
 
+(*
 lemma "Loc_H_DBL = (((vu:reg\<^sub>H\<^sup>< \<ge> 0 \<and> vu:reg\<^sub>H\<^sup>< \<le> 7 \<and> vu:err\<^sub>H\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2)) \<turnstile> (((((vu:reg\<^sub>H\<^sup>> = vu:reg\<^sub>H\<^sup>< * 2) \<or> (vu:reg\<^sub>H\<^sup>> = (vu:reg\<^sub>H\<^sup>< * 2) + 1)) \<and> vu:err\<^sub>H\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2))"
   apply (pred_auto_banks add: Hv_def DBL_def Loc_H_DBL_def)
   sorry
-
+*)
 
 (* Attempt to split out a smaller proof *)
+(*
 lemma "((\<not>L\<^sub>D (Hv) (\<not> ((reg\<^sup>< \<ge> 0 \<and> reg\<^sup>< \<le> 127 \<and> err\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2)))) = (((vu:reg\<^sub>H\<^sup>< \<ge> 0 \<and> vu:reg\<^sub>H\<^sup>< \<le> 7 \<and> vu:err\<^sub>H\<^sup>< = 0)\<^sub>e  \<up> \<^bold>v\<^sub>D\<^sup>2))"
   apply (pred_auto_banks add: Hv_def)
   sorry
-
+*)
+(*
 lemma "((L\<^sub>D (Hv) ((reg\<^sup>> = reg\<^sup>< * 2 \<and> err\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2))) = (((((vu:reg\<^sub>H\<^sup>> = vu:reg\<^sub>H\<^sup>< * 2) \<or> (vu:reg\<^sub>H\<^sup>> = (vu:reg\<^sub>H\<^sup>< * 2) + 1)) \<and> vu:err\<^sub>H\<^sup>> = 0)\<^sub>e \<up> \<^bold>v\<^sub>D\<^sup>2))"
   apply (pred_auto_banks add: Hv_def)
-  
+  *)
 
 (* DBL2 doubles the number, if it is low enough to double without overflow, but unlike DBL, it
 explicitly defines the behaviour in the overflow case. If overflow is detected, then the err bit is

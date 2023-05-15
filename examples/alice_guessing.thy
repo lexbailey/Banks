@@ -32,14 +32,14 @@ alphabet \<alpha>Alice =
   ra :: int
 
 definition Guess0
-  where "Guess0 = Sys (
+  where "Guess0 = (
     n\<^sup>< \<ge> 1 \<and> n\<^sup>< \<le> 10
     \<and> g\<^sup>< \<ge> 1 \<and> g\<^sup>< \<le> 10
 
     \<and> (g\<^sup>< > n\<^sup>< \<longrightarrow> r\<^sup>> > 0)
     \<and> (g\<^sup>< = n\<^sup>< \<longrightarrow> r\<^sup>> = 0)
     \<and> (g\<^sup>< < n\<^sup>< \<longrightarrow> r\<^sup>> < 0)
-  )\<^sub>e"
+  )\<^sub>e \<up> sys\<^sup>2"
 
 (*
 Alternative definition with sys lens manually expanded:
@@ -68,13 +68,11 @@ lemma alice_is_healthy: "VH Alice = Alice"
 *)
 lemma
   "(
-    (infer (Guess0) (Alice) (Vu
-      (ga\<^sup>< = 7 \<and> ra\<^sup>> < 0)\<^sub>e
+    (infer (Guess0) (Alice) (
+      (ga\<^sup>< = 7 \<and> ra\<^sup>> < 0)\<^sub>e \<up> vu\<^sup>2
     ))
     =
-    (Sys
-      (g\<^sup>< = 7 \<and> r\<^sup>> < 0 \<and> n\<^sup>< \<ge> 8 \<and> n\<^sup>< \<le> 10)\<^sub>e
-    )
+    (g\<^sup>< = 7 \<and> r\<^sup>> < 0 \<and> n\<^sup>< \<ge> 8 \<and> n\<^sup>< \<le> 10)\<^sub>e  \<up> sys\<^sup>2
   )"
   by (pred_auto_banks add: Alice_def Guess0_def)
 
