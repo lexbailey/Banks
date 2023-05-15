@@ -1,0 +1,26 @@
+#!/usr/bin/env xonsh
+
+import os
+
+if not os.path.isdir('./isabelle_todocx'):
+    git clone https://github.com/lexbailey/isabelle_todocx.git
+
+prefix = 'documentation/Unsorted/'
+
+to_zip = []
+
+for $f in [
+        'Banks/banks.html'
+        ,'BanksExamples/alice_guessing.html'
+        ,'BanksExamples/byte_register.html'
+        ,'BanksExamples/localise_globalise.html'
+    ]:
+
+    $f = prefix + $f
+
+    $docx_name = os.path.splitext(os.path.basename($f))[0] + '.docx'
+    print(f'generate {$docx_name} from {$f}')
+    ./isabelle_todocx/makedoc "$f" "$docx_name"
+    to_zip.append($docx_name)
+
+zip documents.zip @(to_zip)

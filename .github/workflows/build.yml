@@ -6,8 +6,10 @@ jobs:
     steps:
       - run: sudo apt-get install -y moreutils
       - uses: actions/checkout@v3
-      - run: ./ci_fixer
-      - uses: lexbailey/isabelle-theory-build-github-action@main
+      - name: "Prepare theory files (nasty hack)"
+        run: ./ci_fixer
+      - name: "Isabelle Build"
+        uses: lexbailey/isabelle-theory-build-github-action@main
         with:
           isabelle-version: '2021-1'
           custom-isabelle-url: 'https://github.com/lexbailey/itrees_isabelle_fork/archive/refs/heads/itrees_utp.zip'
@@ -16,3 +18,10 @@ jobs:
           doc_dir: 'documentation'
       - run: ls
       - run: ls documentation
+      - name: "Generate documents"
+        run: ./generate_docx
+      - name: "Archive documents"
+        uses: actions/upload-artifact@v3
+        with:
+          name: "theory_documents"
+          path: "documents.zip"
