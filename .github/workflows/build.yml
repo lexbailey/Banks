@@ -9,15 +9,13 @@ jobs:
       - name: "Prepare theory files (nasty hack)"
         run: ./ci_fixer
       - name: "Isabelle Build"
-        uses: lexbailey/isabelle-theory-build-github-action@main
+        uses: lexbailey/isabelle-theory-build-github-action@v7
         with:
           isabelle-version: '2021-1'
           custom-isabelle-url: 'https://github.com/lexbailey/itrees_isabelle_fork/archive/refs/heads/itrees_utp.zip'
           depends: 'https://github.com/isabelle-utp/UTP.git@main https://github.com/isabelle-utp/UTP-Designs.git@main'
           session-name: 'Banks BanksExamples'
           doc_dir: '../documentation'
-      - run: ls
-      - run: ls documentation
       - name: "Generate documents"
         run: ./generate_docx
       - name: "Archive documents"
