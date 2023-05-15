@@ -1,5 +1,5 @@
 session "Banks" in "Banks" = "UTP-Designs" +
-    theories "./banks"
+    theories "banks"
 
 session "BanksExamples" in "examples" = "Banks" + 
 theories
