@@ -23,5 +23,6 @@ jobs:
       - name: "Archive documents"
         uses: actions/upload-artifact@v3
         with:
-          name: "theory_documents"
-          path: "documents.zip"
+          title: "Build results"
+            - name: "Word Documents"
+              files: [ "banks.docx", "alice_guessing.docx", "byte_register.docx", "localise_globalise.docx" ]

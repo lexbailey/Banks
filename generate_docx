@@ -7,8 +7,6 @@ if not os.path.isdir('./isabelle_todocx'):
 
 prefix = 'documentation/Unsorted/'
 
-to_zip = []
-
 for $f in [
         'Banks/banks.html'
         ,'BanksExamples/alice_guessing.html'
@@ -21,6 +19,4 @@ for $f in [
     $docx_name = os.path.splitext(os.path.basename($f))[0] + '.docx'
     print(f'generate {$docx_name} from {$f}')
     ./isabelle_todocx/makedoc "$f" "$docx_name"
-    to_zip.append($docx_name)
 
-zip documents.zip @(to_zip)
