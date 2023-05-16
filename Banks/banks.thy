@@ -75,18 +75,32 @@ definition VH3
 (* VH is simply both of the healthiness conditions *)
 definition VH where [banks_defs]: "VH = VH1 \<circ> VH2"
 
-expr_constructor VH
-
-lemma VH1_idempotent: "VH1 \<circ> VH1 = VH1"
+text "Law 3.8"
+lemma VH1_idempotent[banks_defs]: "VH1 \<circ> VH1 = VH1"
   by (expr_simp add: VH1_def)
+
+text "Law 3.9 (trivial because id is clearly idempotent and VH2 is just id)"
+lemma VH2_idempotent[banks_defs]: "VH2 \<circ> VH2 = VH2"
+  by (expr_simp add: VH2_def)
+
+(*
+text "Law 3.10 (trivial because VH2 is id)"
+lemma VH1_2_non_commute: "(VH2 \<circ> VH1) V \<sqsubseteq> (VH1 \<circ> VH2) V"
+  by (expr_simp add: VH2_def)
+*)
+
+text "Our VH2 simplification strengthens law 3.10"
+lemma VH1_2_commute: "(VH2 \<circ> VH1) = (VH1 \<circ> VH2)"
+  by (expr_simp add: VH2_def)
 
 lemma VH_is_VH1[banks_defs]: "VH v = VH1 v"
   by (simp add: VH_def VH2_def)
 
-lemma VH3_idempotent: "VH3 \<circ> VH3 = VH3"
+lemma VH3_idempotent[banks_defs]: "VH3 \<circ> VH3 = VH3"
   by (expr_auto add: VH3_def)
 
-lemma VH_idempotent: "VH \<circ> VH = VH"
+text "Corollary 3.12, once again trivial because of VH2 simplification"
+lemma VH_idempotent[banks_defs]: "VH \<circ> VH = VH"
   by (expr_simp add: VH_def VH1_def VH2_def)
 
 (* These lemmas are present in Banks work, but are trivial here for the reasons mentioned above.
