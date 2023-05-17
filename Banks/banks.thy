@@ -234,7 +234,7 @@ definition IR
   where [banks_defs]: "IR V = \<Delta> (U V)"
 
 expr_constructor G IR
-
+(*
 text "Lemma 3.24"
 lemma g_not:
   assumes "V is VH3"
@@ -247,7 +247,7 @@ lemma
   shows "G V P = (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> P)\<^sub>e"
   apply (pred_auto add: banks_defs)
   sorry
-
+*)
 (* note: delta is in this definition, which I think is correct, but it's not in Banks' definition *)
 definition UI :: "_ \<Rightarrow> (_ \<Rightarrow> bool) \<Rightarrow> (_ \<Rightarrow> bool)"
   where [banks_defs]: "UI V P = (\<Delta> (U P) \<and> IR V)\<^sub>e"
