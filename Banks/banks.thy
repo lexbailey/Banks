@@ -2,6 +2,14 @@ theory banks
   imports Main UTP2.utp "Shallow-Expressions.Shallow_Expressions" "UTP-Designs.utp_des_healths"
 begin
 
+text "
+An encoding of Banks's confidentiality framework for UTP.
+
+Citation: Banks, M.J.: On Confidentiality and Formal Methods. University of York. http://etheses.whiterose.ac.uk/2709/ (2012).
+
+This theory file refers to the definitions, laws, lemmas, etc in the above thesis by their numbers in the thesis.
+ "
+
 (* slight variation on the Isabelle/UTP expr_simp method *)
 (* TODO pull request to add this to base isabelle/UTP*)
 method expr_simp2 uses add = 
@@ -54,6 +62,7 @@ lemma liberate1_false [simp]: "(False)\<^sub>e !\\ a = (False)\<^sub>e"
 
 (* healthiness conditions for views*)
 
+text "Definition 3.3"
 definition VH1
   where [banks_defs]: "VH1 V = ((\<exists> vu \<Zspot> V) \<longrightarrow> V)\<^sub>e"
 
@@ -67,11 +76,14 @@ in a view definition will result in a type error from isabelle at some point.
 For completeness, we have a definition for VH2, but it's just the identity function
 *)
 
+text "Definition 3.7"
 definition VH2 where [banks_defs]: "VH2 = id"
 
+text "Definition 3.15"
 definition VH3
   where [banks_defs]: "VH3 P = (P !\\ $vu \<longrightarrow> P)\<^sub>e"
 
+text "Definition 3.11"
 (* VH is simply both of the healthiness conditions *)
 definition VH where [banks_defs]: "VH = VH1 \<circ> VH2"
 
@@ -93,6 +105,8 @@ text "Our VH2 simplification strengthens law 3.10"
 lemma VH1_2_commute: "(VH2 \<circ> VH1) = (VH1 \<circ> VH2)"
   by (expr_simp add: VH2_def)
 
+(* A simplification rule that is not present in Banks's work, it's only valid here because of the
+VH2 simplifications *)
 lemma VH_is_VH1[banks_defs]: "VH v = VH1 v"
   by (simp add: VH_def VH2_def)
 
@@ -103,19 +117,13 @@ text "Corollary 3.12, once again trivial because of VH2 simplification"
 lemma VH_idempotent[banks_defs]: "VH \<circ> VH = VH"
   by (expr_simp add: VH_def VH1_def VH2_def)
 
-(* These lemmas are present in Banks work, but are trivial here for the reasons mentioned above.
-They are only here for completeness *)
-lemma "VH1 \<circ> VH = VH"
-  by (expr_simp add: VH_def VH1_def)
-
-lemma "VH2 \<circ> VH = VH"
-  by (expr_simp add: VH1_def VH2_def VH_def)
-
 text "Lemma 3.13"
+(* This currently requires defining a new alphabet to be able to describe disjoint views*)
 alphabet ('a, 'b) twoparts =
   twopart_a ::'a
   twopart_b ::'b
 
+(* now we can show lemma 3.13 on a pair of disjoint views *)
 lemma conj_preserve_vh[banks_defs]:
   (* views are healthy *)
   assumes "(v1 :: ('a,('b,'c) twoparts) viewed_system \<Rightarrow> bool) is VH"
@@ -154,27 +162,30 @@ lemma aext_liberate_indep:
 
 lemma "D (U P) = P"
   by (pred_auto add: D_def U_def p1 aext_liberate_indep)
-  
+
+text "Definition (unnumbered, defined just after definition 3.7 (VH2)"
 definition \<Delta> :: "(_ \<Rightarrow> bool) \<Rightarrow> _"
   where [banks_defs]: "\<Delta> V = (V\<^sup>< \<and> V\<^sup>>)"
 
+text "Variant of the above definition with different type"
 definition \<Delta>\<^sub>D :: "(_ \<Rightarrow> bool) \<Rightarrow> _"
   where [banks_defs]: "\<Delta>\<^sub>D V = (V\<^sup>< \<turnstile> V\<^sup>>)"
 
 expr_constructor \<Delta> \<Delta>\<^sub>D
 
-lemma \<Delta>_conj_refine: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((\<Delta> V) \<and> P1)\<^sub>e \<sqsubseteq> ((\<Delta> V) \<and> P2)\<^sub>e"
+lemma \<Delta>_conj_refine[banks_defs]: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((\<Delta> V) \<and> P1)\<^sub>e \<sqsubseteq> ((\<Delta> V) \<and> P2)\<^sub>e"
   apply (expr_simp2 add: \<Delta>_def)
   by (smt (verit, ccfv_SIG) ref_by_fun_def ref_preorder.eq_refl)
 
-lemma \<Delta>\<^sub>D_conj_refine: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((\<Delta>\<^sub>D V) \<and> P1)\<^sub>e \<sqsubseteq> ((\<Delta>\<^sub>D V) \<and> P2)\<^sub>e"
+lemma \<Delta>\<^sub>D_conj_refine[banks_defs]: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((\<Delta>\<^sub>D V) \<and> P1)\<^sub>e \<sqsubseteq> ((\<Delta>\<^sub>D V) \<and> P2)\<^sub>e"
   apply (expr_simp2 add: \<Delta>\<^sub>D_def)
   by (smt (verit, ccfv_SIG) ref_by_fun_def ref_preorder.eq_refl)
 
-lemma  ex_conj_refine: "(V \<and> P1)\<^sub>e \<sqsubseteq> (V \<and> P2)\<^sub>e \<longrightarrow> (\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> (V \<and> P1))\<^sub>e \<sqsubseteq> (\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> (V \<and> P2))\<^sub>e"
+lemma  ex_conj_refine[banks_defs]: "(V \<and> P1)\<^sub>e \<sqsubseteq> (V \<and> P2)\<^sub>e \<longrightarrow> (\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> (V \<and> P1))\<^sub>e \<sqsubseteq> (\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> (V \<and> P2))\<^sub>e"
   apply (expr_simp2)
   by (smt (z3) prod.sel(1) prod.sel(2) ref_by_fun_def ref_preorder.order_refl)
 
+text "Definition 3.17"
 definition L
   where [banks_defs]: "L V P = (\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> (\<Delta> V \<and> P \<up> sys\<^sup>2 ))\<^sub>e"
 
@@ -194,22 +205,28 @@ definition L_one_alpha
 expr_constructor L_one_alpha
 *)
 
+text "Type variation of definition 3.17"
 definition L\<^sub>P
   where [banks_defs]: "L\<^sub>P V P = ((\<exists> (sys) \<Zspot> ( V \<and> P \<up> sys )))\<^sub>e"
 
 expr_constructor L
 expr_constructor L\<^sub>P
 
-(* Localisation is disjunctive *)
-lemma l_disj: "(L v (P1 \<or> P2)\<^sub>e)\<^sub>e = ((L v P1) \<or> (L v P2))\<^sub>e"
+text "Law 3.19"
+lemma l_disj: "(L v (P1 \<or> P2)\<^sub>e) = ((L v P1) \<or> (L v P2))\<^sub>e"
   by (expr_simp2 add: L_def, blast)
 
+text "Law 3.20"
 lemma l_monotonic: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((L v P1) \<sqsubseteq> (L v P2))"
   by (pred_auto add: L_def)
 
+text "Law 3.20 for the differently-typed Lp"
 lemma lp_monotonic: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((L\<^sub>P v P1) \<sqsubseteq> (L\<^sub>P v P2))"
   by (pred_auto add: L\<^sub>P_def)
 
+(* TODO Law 3.21 is really fun, prove it here *)
+
+text "Definition 3.22"
 definition G
   where [banks_defs]: "G v u = (\<forall> (vu\<^sup><, vu\<^sup>>) \<Zspot> ((\<Delta> v) \<longrightarrow> u))\<^sub>e"
 
@@ -218,15 +235,30 @@ definition IR
 
 expr_constructor G IR
 
+text "Lemma 3.24"
+lemma g_not:
+  assumes "V is VH3"
+  shows "G V P = (\<not> (G V (\<not> P)))"
+  apply (pred_auto add: banks_defs)
+  sorry
+
+lemma
+  assumes "V is VH3"
+  shows "G V P = (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> P)\<^sub>e"
+  apply (pred_auto add: banks_defs)
+  sorry
+
 (* note: delta is in this definition, which I think is correct, but it's not in Banks' definition *)
 definition UI :: "_ \<Rightarrow> (_ \<Rightarrow> bool) \<Rightarrow> (_ \<Rightarrow> bool)"
   where [banks_defs]: "UI V P = (\<Delta> (U P) \<and> IR V)\<^sub>e"
 
+text "Definition 3.28"
 definition infer
     where [banks_defs]: "infer P V \<psi> = (P \<and> (Not (G (V) (Not \<circ> \<psi>))))\<^sub>e"
 
 expr_constructor infer
 
+text "Corollary 3.29"
 lemma
   assumes "V is VH3"
   shows "infer P V \<psi> = (P \<and> (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> \<psi>))\<^sub>e"
@@ -243,6 +275,7 @@ end
 definition pair_map :: "('a \<Rightarrow> 'b) \<Rightarrow> ('a * 'a) \<Rightarrow> ('b * 'b)"
   where [banks_defs]:"pair_map f p = (f (fst p), f (snd p))"
 
+text "Definition 3.32"
 (* Like with VH2, this healthiness condition is not particularly useful to us in this implementation
 of Banks's work. OK does not need to do anything, since we simply ignore the variable ok\<^sub>v.
 This is safe to do because there is no mechanism to inspect or assign to ok\<^sub>v. No predicate could
@@ -252,6 +285,7 @@ definition OK :: "((('a, 'b, 'c) viewed_system_scheme) des_vars_scheme \<Rightar
 
 expr_constructor OK
 
+text "Definition 3.33"
 (* as such, VHD is also just VH *)
 definition VHD
   where [banks_defs]: "VHD V = (
@@ -268,9 +302,6 @@ lemma [banks_defs]: "a is OK" (* everything is OK *)
 
 lemma [banks_defs]: "VHD V = (if (V \<down> \<^bold>v\<^sub>D) is VH then V else true)"
   by (pred_auto add: VHD_def VH_def VH1_def VH2_def OK_def)
-
-definition condition
-  where "condition v = (\<lambda> (a, b). v a)"
 
 definition view_des_cond :: "(('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>) \<Rightarrow> ('a des_vars_scheme, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>"
   where [banks_defs]: "view_des_cond v = (\<lambda> a .
@@ -317,9 +348,11 @@ lemma view_des_disj_split: "to_viewed_design (a \<or> b) = (to_viewed_design a \
 
 expr_constructor "to_viewed_design"
 
+text "Type variation of definition 3.17"
 definition L\<^sub>D :: "(('a, 'b, 'c) viewed_system_scheme des_vars_ext \<Rightarrow> \<bool>) \<Rightarrow> 'a des_vars_scheme hrel \<Rightarrow> ('a, 'b, 'c) viewed_system_scheme des_vars_ext hrel"
   where [banks_defs]: "L\<^sub>D V P = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> ((\<Delta>\<^sub>D V) \<and> (to_viewed_design P)))\<^sub>e"
 
+text "Type variation of law 3.20"
 lemma ld_monotonic: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((L\<^sub>D v P1) \<sqsubseteq> (L\<^sub>D v P2))"
   apply (pred_auto add: L\<^sub>D_def to_viewed_design_def pair_map_def \<Delta>\<^sub>D_def)
   by blast+
@@ -438,6 +471,7 @@ lemma design_precondition_split_ok4:
   using indep_extra
   using assms(1) design_precondition_split_ok3 by blast
 
+text "Lemma 3.35"
 lemma view_local_design [banks_defs] :
   fixes V :: "('a, 'b, 'c) viewed_system_scheme des_vars_scheme \<Rightarrow> \<bool>"
   assumes "V is VHD"
