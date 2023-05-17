@@ -111,12 +111,23 @@ lemma "VH1 \<circ> VH = VH"
 lemma "VH2 \<circ> VH = VH"
   by (expr_simp add: VH1_def VH2_def VH_def)
 
-lemma conj_preserve_vh:"
-    (((VH v1) \<and> (VH v2))\<^sub>e b)
-    \<longrightarrow>
-    ((VH (v1 \<and> v2)\<^sub>e) b)
-  "
-  by (expr_simp add: VH_def VH1_def VH2_def, auto)
+text "Lemma 3.13"
+alphabet ('a, 'b) twoparts =
+  twopart_a ::'a
+  twopart_b ::'b
+
+lemma conj_preserve_vh[banks_defs]:
+  (* views are healthy *)
+  assumes "(v1 :: ('a,('b,'c) twoparts) viewed_system \<Rightarrow> bool) is VH"
+  assumes "(v2 :: ('a,('b,'c) twoparts) viewed_system \<Rightarrow> bool) is VH"
+  (* views are disjoint *)
+  assumes "$vu:twopart_a \<sharp> v1"
+  assumes "$vu:twopart_b \<sharp> v2"
+  (* conjunction of views is still healthy *)
+  shows"(v1 \<and> v2)\<^sub>e is VH"
+  using assms
+  apply (pred_auto add: VH_def VH1_def VH2_def)
+  by meson+
 
 definition U
   where [banks_defs]: "U P = ((P\<up>obs) \<and> (P\<up>fog))"
@@ -267,7 +278,7 @@ definition view_des_cond :: "(('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<
     v \<lparr>
       sys\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>sys\<^esub> a)
       ,vu\<^sub>v = get\<^bsub>vu\<^esub> a
-      ,\<dots> = get\<^bsub>more\<^sub>L\<^esub> a
+      ,\<dots> = get\<^bsub>viewed_system.more\<^sub>L\<^esub> a
     \<rparr>)
   )"
 
