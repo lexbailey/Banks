@@ -254,7 +254,7 @@ definition UI :: "_ \<Rightarrow> (_ \<Rightarrow> bool) \<Rightarrow> (_ \<Righ
 
 text "Definition 3.28"
 definition infer
-    where [banks_defs]: "infer P V \<psi> = (P \<and> (Not (G (V) (Not \<circ> \<psi>))))\<^sub>e"
+    where [banks_defs]: "infer P V \<psi> = (P \<and> \<not> G V (\<not> \<psi>))\<^sub>e"
 
 expr_constructor infer
 
@@ -262,7 +262,7 @@ text "Corollary 3.29"
 lemma
   assumes "V is VH3"
   shows "infer P V \<psi> = (P \<and> (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> \<psi>))\<^sub>e"
-  by (expr_simp add: infer_def G_def VH3_def \<Delta>_def)
+  by (pred_simp add: infer_def G_def VH3_def \<Delta>_def)
 
 (* Instantiate default for views *)
 instantiation viewed_system_ext :: (default, default, default) default
