@@ -30,6 +30,8 @@ definition V3 where "V3 = (vu:d3 = sys:x \<and> (if sys:x < sys:y then (vu:e3 = 
 
 definition ExSys where "ExSys = \<Delta> (x \<ge> 0 \<and> y \<ge> 0 \<and> x + y = 10)\<^sub>e"
 
+term conj_pred
+
 lemma v1_healthy1: "V1 is VH"
   by (pred_auto_banks add: V1_def)
 
