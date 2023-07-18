@@ -391,6 +391,8 @@ definition VHD2 where [bdefs2]:"VHD2 v = (OK2 (VHtwo v))"
 
 definition L2 where [bdefs2]:"L2 v p = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> v \<and> p)"
 
+definition design_v where [bdefs2]: "design_v P Q = ((\<^bold>v\<^sub>D:vu:ok\<^sup>< \<and> P) \<longrightarrow> (\<^bold>v\<^sub>D:vu:ok\<^sup>> \<and> Q))\<^sub>e"
+
 lemma a1: "(L2 V (pre' \<turnstile> post')) = ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> (ok\<^sup>> \<and> post')\<^sub>e))"
 proof -
   have "(L2 V (pre' \<turnstile> post')) = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> (ok\<^sup>< \<and> pre' \<longrightarrow> ok\<^sup>> \<and> post')\<^sub>e)"
@@ -406,16 +408,18 @@ proof -
     by (pred_auto)
 qed
 
-lemma a2: "((\<not>L2 V (\<not>pre'))) \<turnstile> ((L2 V post')) = ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre')) \<or> (ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
+lemma a2:
+  assumes "\<Delta> V is VHD2"
+  shows "(design_v (\<not>L2 V (\<not>pre'))) ((L2 V post')) = ((\<not> (\<^bold>v\<^sub>D:vu:ok\<^sup><) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre')) \<or> (\<^bold>v\<^sub>D:vu:ok\<^sup>>) \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
 proof -
-  have "((\<not>L2 V (\<not>pre'))) \<turnstile> ((L2 V post')) = ((ok\<^sup><) \<and> \<not> (L2 V (\<not> pre')) \<longrightarrow> (ok\<^sup>>) \<and> (L2 V post'))"
-    apply (subst design_def)
+  have "(design_v(\<not>L2 V (\<not>pre'))) ((L2 V post')) = ((\<^bold>v\<^sub>D:vu:ok\<^sup><) \<and> \<not> (L2 V (\<not> pre')) \<longrightarrow> (\<^bold>v\<^sub>D:vu:ok\<^sup>>) \<and> (L2 V post'))"
+    apply (subst design_v_def)
     by (pred_auto)
-  also have "... = (\<not>((ok\<^sup><) \<and> \<not> (L2 V (\<not> pre'))) \<or> (ok\<^sup>>) \<and> (L2 V post'))"
+  also have "... = (\<not>((\<^bold>v\<^sub>D:vu:ok\<^sup><) \<and> \<not> (L2 V (\<not> pre'))) \<or> (\<^bold>v\<^sub>D:vu:ok\<^sup>>) \<and> (L2 V post'))"
     by (pred_auto)
-  also have "... = ((\<not>(ok\<^sup><) \<or> (L2 V (\<not> pre'))) \<or> (ok\<^sup>>) \<and> (L2 V post'))"
+  also have "... = ((\<not>(\<^bold>v\<^sub>D:vu:ok\<^sup><) \<or> (L2 V (\<not> pre'))) \<or> (\<^bold>v\<^sub>D:vu:ok\<^sup>>) \<and> (L2 V post'))"
     by (pred_auto)
-  also have "... = ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre')) \<or> (ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
+  also have "... = ((\<not> (\<^bold>v\<^sub>D:vu:ok\<^sup><) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre')) \<or> (\<^bold>v\<^sub>D:vu:ok\<^sup>>) \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
     apply (subst L2_def)
     apply (subst L2_def)
     by simp
@@ -425,30 +429,45 @@ qed
 
 lemma a3:
   assumes "\<Delta> V is VHD2"
-  assumes "(\<exists> (\<^bold>v\<^sub>D:vu\<^sup><, \<^bold>v\<^sub>D:vu\<^sup>>) \<Zspot> post') = post'"
+  assumes "((\<exists> (\<^bold>v\<^sub>D:vu\<^sup><, \<^bold>v\<^sub>D:vu\<^sup>>) \<Zspot> post') \<longrightarrow> post') = post'"
   shows  "((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> (ok\<^sup>> \<and> post')\<^sub>e)) = ((\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
   using assms
-  apply -
-  apply (pred_auto add: banks_defs bdefs2)
-  nitpick [merge_type_vars, timeout = 999]
-sorry
+   apply (expr_simp add: banks_defs bdefs2)
+  try
+
+  sorry
+
+lemma "((\<Delta>
+         ((\<lambda>x. False)
+        (\<lparr>ok\<^sub>v = True, sys\<^sub>v = a\<^sub>1, vu\<^sub>v = \<lparr>ok\<^sub>v = True, \<dots> = a\<^sub>1\<rparr>, \<dots> = a\<^sub>1\<rparr> := True, \<lparr>ok\<^sub>v = True, sys\<^sub>v = a\<^sub>1, vu\<^sub>v = \<lparr>ok\<^sub>v = False, \<dots> = a\<^sub>1\<rparr>, \<dots> = a\<^sub>1\<rparr> := True,
+         \<lparr>ok\<^sub>v = False, sys\<^sub>v = a\<^sub>1, vu\<^sub>v = \<lparr>ok\<^sub>v = True, \<dots> = a\<^sub>1\<rparr>, \<dots> = a\<^sub>1\<rparr> := True, \<lparr>ok\<^sub>v = False, sys\<^sub>v = a\<^sub>1, vu\<^sub>v = \<lparr>ok\<^sub>v = False, \<dots> = a\<^sub>1\<rparr>, \<dots> = a\<^sub>1\<rparr> := True))) is VHD2)"
+  apply (pred_simp add: banks_defs bdefs2)
+  try
+
 
 lemma a1_2:
   assumes "\<Delta> V is VHD2"
+  assumes "((\<exists> (\<^bold>v\<^sub>D:vu\<^sup><, \<^bold>v\<^sub>D:vu\<^sup>>) \<Zspot> post') \<longrightarrow> post') = post'"
   shows "(L2 V (pre' \<turnstile> post')) = ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e) \<or> ((\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post')))"
   using assms
   apply (subst a1)
   apply (subst a3)
    apply simp
+   apply simp
   apply simp
   done
 
 lemma
+  assumes "\<Delta> V is VHD2"
+  assumes "((\<exists> (\<^bold>v\<^sub>D:vu\<^sup><, \<^bold>v\<^sub>D:vu\<^sup>>) \<Zspot> post') \<longrightarrow> post') = post'"
   shows "(L2 V (pre' \<turnstile> post')) = ((\<not>L2 V (\<not>pre'))) \<turnstile> ((L2 V post')) \<longleftrightarrow> (
-      ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e)   \<or>   (ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))  
-    = ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre'))      \<or>   (ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post')) 
+      ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e)   \<or>   (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))  
+    = ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre'))      \<or>   (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post')) 
   )"
-    by (simp only: a1_2 a2)
+  using assms
+  apply -
+  apply (simp add: a1_2 a2)
+  apply auto
 
 lemma
   assumes "v is VHD2"
