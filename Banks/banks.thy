@@ -3,7 +3,7 @@ theory banks
 begin
 
 text "
-An encoding of Banks's confidentiality framework for UTP.
+A failed encoding of Banks's confidentiality framework for UTP.
 
 Citation: Banks, M.J.: On Confidentiality and Formal Methods. University of York. http://etheses.whiterose.ac.uk/2709/ (2012).
 
@@ -138,52 +138,22 @@ lemma conj_preserve_vh[banks_defs]:
   apply (pred_auto add: VH_def VH1_def VH2_def)
   by meson+
 
-definition U
-  where [banks_defs]: "U P = ((P\<up>obs) \<and> (P\<up>fog))"
-
-definition D where [banks_defs]: "D Q = (Q \\ $fog \<down> obs)\<^sub>e"
-
-expr_constructor U D
-
-lemma p1: "((P \<up> obs \<and> P \<up> fog) \\ $fog)\<^sub>e = ((P \<up> obs) \\ $fog \<and> (P \<up> fog) \\ $fog)\<^sub>e"
-  by (pred_auto)
-
-lemma "(U (P1 \<and> P2)\<^sub>e) = ((U P1) \<and> (U P2))\<^sub>e"
-  by (pred_auto add: U_def)
-
-lemma "(D (P1 \<or> P2)\<^sub>e) = ((D P1) \<or> (D P2))\<^sub>e"
-  apply (simp add: D_def)
-  by expr_simp
-
 lemma aext_liberate_indep:
   fixes e :: "_ \<Rightarrow> _"
   assumes "mwb_lens y" "x \<bowtie> y"
   shows "(e \<up> x)\<^sub>e \\ $y = (e \<up> x)"
   using assms by expr_simp
 
-lemma "D (U P) = P"
-  by (pred_auto add: D_def U_def p1 aext_liberate_indep)
-
 text "Definition (unnumbered, defined just after definition 3.7 (VH2)"
 definition \<Delta> :: "(_ \<Rightarrow> bool) \<Rightarrow> _"
   where [banks_defs]: "\<Delta> V = (V\<^sup>< \<and> V\<^sup>>)"
 
-text "Variant of the above definition with different type"
-definition \<Delta>\<^sub>D :: "(_ \<Rightarrow> bool) \<Rightarrow> _"
-(*  where [banks_defs]: "\<Delta>\<^sub>D V = ((ok\<^sup>< \<and> V\<^sup><) \<longrightarrow> (ok\<^sup>> \<and> V\<^sup>>))"*)
-  where [banks_defs]: "\<Delta>\<^sub>D = \<Delta>"
-
-
-expr_constructor \<Delta> \<Delta>\<^sub>D
+expr_constructor \<Delta>
 
 definition DVH1 where "DVH1 V = ((\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> V) \<longrightarrow> V)\<^sub>e"
 
 lemma \<Delta>_conj_refine[banks_defs]: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((\<Delta> V) \<and> P1)\<^sub>e \<sqsubseteq> ((\<Delta> V) \<and> P2)\<^sub>e"
   apply (expr_simp2 add: \<Delta>_def)
-  by (smt (verit, ccfv_SIG) ref_by_fun_def ref_preorder.eq_refl)
-
-lemma \<Delta>\<^sub>D_conj_refine[banks_defs]: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((\<Delta>\<^sub>D V) \<and> P1)\<^sub>e \<sqsubseteq> ((\<Delta>\<^sub>D V) \<and> P2)\<^sub>e"
-  apply (expr_simp2 add: \<Delta>\<^sub>D_def)
   by (smt (verit, ccfv_SIG) ref_by_fun_def ref_preorder.eq_refl)
 
 lemma  ex_conj_refine[banks_defs]: "(V \<and> P1)\<^sub>e \<sqsubseteq> (V \<and> P2)\<^sub>e \<longrightarrow> (\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> (V \<and> P1))\<^sub>e \<sqsubseteq> (\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> (V \<and> P2))\<^sub>e"
@@ -229,33 +199,19 @@ text "Law 3.20 for the differently-typed Lp"
 lemma lp_monotonic: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((L\<^sub>P v P1) \<sqsubseteq> (L\<^sub>P v P2))"
   by (pred_auto add: L\<^sub>P_def)
 
-(* TODO Law 3.21 is really fun, prove it here *)
-
 text "Definition 3.22"
 definition G
   where [banks_defs]: "G v u = (\<forall> (vu\<^sup><, vu\<^sup>>) \<Zspot> ((\<Delta> v) \<longrightarrow> u))\<^sub>e"
 
-definition IR
-  where [banks_defs]: "IR V = \<Delta> (U V)"
+expr_constructor G
 
-expr_constructor G IR
-(*
 text "Lemma 3.24"
 lemma g_not:
+  assumes "V is VH1"
   assumes "V is VH3"
   shows "G V P = (\<not> (G V (\<not> P)))"
   apply (pred_auto add: banks_defs)
-  sorry
-
-lemma
-  assumes "V is VH3"
-  shows "G V P = (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> P)\<^sub>e"
-  apply (pred_auto add: banks_defs)
-  sorry
-*)
-(* note: delta is in this definition, which I think is correct, but it's not in Banks' definition *)
-definition UI :: "_ \<Rightarrow> (_ \<Rightarrow> bool) \<Rightarrow> (_ \<Rightarrow> bool)"
-  where [banks_defs]: "UI V P = (\<Delta> (U P) \<and> IR V)\<^sub>e"
+  oops
 
 text "Definition 3.28"
 definition infer
@@ -269,66 +225,11 @@ lemma
   shows "infer P V \<psi> = (P \<and> (\<exists> (vu\<^sup><, vu\<^sup>>) \<Zspot> \<Delta> V \<and> \<psi>))\<^sub>e"
   by (pred_simp add: infer_def G_def VH3_def \<Delta>_def)
 
-(* Instantiate default for views *)
-instantiation viewed_system_ext :: (default, default, default) default
-begin
-definition default_viewed_system_ext :: "('a, 'b, 'c) viewed_system_scheme" where 
-"default_viewed_system_ext =  \<lparr> sys\<^sub>v = default, vu\<^sub>v = default, \<dots> = default \<rparr>"
-instance ..
-end
+(*=======================================================================================
+This is the end of the things that work correctly
 
-definition pair_map :: "('a \<Rightarrow> 'b) \<Rightarrow> ('a * 'a) \<Rightarrow> ('b * 'b)"
-  where [banks_defs]:"pair_map f p = (f (fst p), f (snd p))"
-
-text "Definition 3.32"
-(* Like with VH2, this healthiness condition is not particularly useful to us in this implementation
-of Banks's work. OK does not need to do anything, since we simply ignore the variable ok\<^sub>v.
-This is safe to do because there is no mechanism to inspect or assign to ok\<^sub>v. No predicate could
-refer to ok\<^sub>v in an unhealthy way, because no predicate can refer to ok\<^sub>v at all.  *)
-definition OK :: "((('a, 'b, 'c) viewed_system_scheme) des_vars_scheme \<Rightarrow> bool) \<Rightarrow> ((('a, 'b, 'c) viewed_system_scheme) des_vars_scheme \<Rightarrow> bool)"
-  where [banks_defs]: "OK = id"
- (* where [banks_defs]: "OK V = (if ($ok \<sharp> V) then V else true)"*)
-(*  where [banks_defs]: "OK V = (ok \<longrightarrow> V)\<^sub>e"*)
-
-expr_constructor OK
-
-text "Definition 3.33"
-(* as such, VHD is also just VH *)
-definition VHD
-  where [banks_defs]: "VHD V = (
-    if (V is OK) \<and> ((V \<down> \<^bold>v\<^sub>D) is VH)
-    then V
-    else true
-  )"
-
-expr_constructor VHD
-(*
-named_theorems indep_extra
-
-lemma before_ok_indep [indep_extra]: "($\<^bold>v\<^sub>D\<^sup><) \<sharp> (ok\<^sup><)\<^sub>e"
-  by (smt (verit, best) SEXP_apply des_vars.indeps(2) des_vars.more\<^sub>L_vwb_lens expr_pre fst_lens_def fst_vwb_lens lens.simps(2) lens_comp_def ns_alpha_def ns_alpha_mwb prod.case_eq_if subst_app_def subst_ext_def unrest_lens unrest_var_single vwb_lens.axioms(2))
-
-lemma after_ok_indep [indep_extra]: "($\<^bold>v\<^sub>D\<^sup>>) \<sharp> (ok\<^sup>>)\<^sub>e"
-  by (smt (verit) SEXP_def des_vars.indeps(2) des_vars.more\<^sub>L_vwb_lens lens.simps(1) lens.simps(2) lens_comp_def ns_alpha_def ns_alpha_mwb prod.case_eq_if prod.sel(2) snd_lens_def snd_vwb_lens subst_app_def subst_ext_def unrest_lens unrest_var_single vwb_lens.axioms(2))
-
-lemma mixed_ok_indep1 [indep_extra]: "($\<^bold>v\<^sub>D\<^sup>>) \<sharp> (ok\<^sup><)\<^sub>e"
-  by (smt (verit, ccfv_threshold) SEXP_apply des_vars.more\<^sub>L_vwb_lens expr_pre fst_lens_def lens.simps(1) lens.simps(2) lens_comp_def ns_alpha_def ns_alpha_mwb prod.case_eq_if snd_lens_def snd_vwb_lens subst_app_def subst_ext_def unrest_lens vwb_lens.axioms(2))
-
-lemma mixed_ok_indep2 [indep_extra]: "($\<^bold>v\<^sub>D\<^sup><) \<sharp> (ok\<^sup>>)\<^sub>e"
-  by (smt (verit, del_insts) SEXP_apply des_vars.more\<^sub>L_vwb_lens fst_lens_def fst_vwb_lens lens.simps(1) lens.simps(2) lens_comp_def ns_alpha_def ns_alpha_mwb prod.case_eq_if prod.sel(2) snd_lens_def subst_app_def subst_ext_def unrest_lens vwb_lens.axioms(2))
-
-lemma [indep_extra]: "($\<^bold>v\<^sub>D\<^sup><) \<sharp> (\<not>ok\<^sup><)\<^sub>e"
-  using before_ok_indep unrest_not by fastforce
-
-lemma [indep_extra]: "($\<^bold>v\<^sub>D\<^sup>>) \<sharp> (\<not>ok\<^sup>>)\<^sub>e"
-  using after_ok_indep unrest_not by fastforce
-
-lemma [indep_extra]: "($\<^bold>v\<^sub>D\<^sup>>) \<sharp> (\<not>ok\<^sup><)\<^sub>e"
-  using mixed_ok_indep1 unrest_not by fastforce
-
-lemma [indep_extra]: "($\<^bold>v\<^sub>D\<^sup><) \<sharp> (\<not>ok\<^sup>>)\<^sub>e"
-  using mixed_ok_indep2 unrest_not by fastforce
-*)
+this is the start of the proof that at this point banks's work hits a fundamental flaw
+=======================================================================================*)
 
 (* bdefs2 holds extra definitions that are closer to banks's definitions, for the purposes of making sure
 nobody can suggest that our simplifications are changing the problem *)
@@ -438,7 +339,7 @@ lemma b2:
 (* This is the root of the tree of proofs that show lemma 3.35 is wrong *)
 lemma lemma_3_35_is_wrong:
   assumes "\<Delta> V is VHD2"
-  assumes "V \<noteq> true"
+  assumes "V \<noteq> true" (* the lemma only holds for the empty view, which is not useful *)
   shows "\<not> ((L2 V (pre' \<turnstile> post')) = ((\<not>L2 V (\<not>pre'))) \<turnstile> ((L2 V post')))"
   using assms
   apply (subst b1)

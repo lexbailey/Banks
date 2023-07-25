@@ -68,6 +68,7 @@ lemma "(G V2 Loc2) = \<Delta>(((max x y \<ge> 5) \<and> (max x y \<le> 10))\<^su
   apply (pred_auto_banks add: Loc2_def V2_def ExSys_def)
   by presburger
 
+
 lemma "(G V3 Loc3) = \<Delta>(( if x < y then (x \<ge> 0 \<and> x < 5) else (x \<ge> 5 \<and> x \<le> 10))\<^sub>e  \<up> sys)"
   apply (expr_simp_banks add: Loc3_def V3_def ExSys_def)
   apply (pred_simp)
