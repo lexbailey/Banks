@@ -302,7 +302,7 @@ definition VHD
   )"
 
 expr_constructor VHD
-
+(*
 named_theorems indep_extra
 
 lemma before_ok_indep [indep_extra]: "($\<^bold>v\<^sub>D\<^sup><) \<sharp> (ok\<^sup><)\<^sub>e"
@@ -328,6 +328,7 @@ lemma [indep_extra]: "($\<^bold>v\<^sub>D\<^sup>>) \<sharp> (\<not>ok\<^sup><)\<
 
 lemma [indep_extra]: "($\<^bold>v\<^sub>D\<^sup><) \<sharp> (\<not>ok\<^sup>>)\<^sub>e"
   using mixed_ok_indep2 unrest_not by fastforce
+*)
 
 (* bdefs2 holds extra definitions that are closer to banks's definitions, for the purposes of making sure
 nobody can suggest that our simplifications are changing the problem *)
@@ -382,7 +383,7 @@ proof -
     by simp
 qed
 
-(**)
+(* Another small transform on the left side *)
 lemma a3:
   assumes "\<Delta> V is VHD2"
   assumes "V \<noteq> true"
