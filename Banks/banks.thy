@@ -303,54 +303,6 @@ definition VHD
 
 expr_constructor VHD
 
-(*
-lemma "(V is VHD) = ((V is OK) \<and> ((V \<down> \<^bold>v\<^sub>D) is VH))"
-  apply (pred_auto add: banks_defs)
-   apply (metis des_vars.cases_scheme viewed_system.cases_scheme)
-  apply (metis)
-  done
-*)
-(* Some simplifications around healthiness conditions *)
-(*
-lemma [banks_defs]: "a is OK" (* everything is OK *)
-  by (pred_auto add: OK_def)
-
-lemma [banks_defs]: "VHD V = (if (V \<down> \<^bold>v\<^sub>D) is VH then V else true)"
-  by (pred_auto add: VHD_def VH_def VH1_def VH2_def OK_def)
-*)
-
-definition view_des_cond :: "(('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>) \<Rightarrow> ('a des_vars_scheme, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>"
-  where [banks_defs]: "view_des_cond v = (\<lambda> a .
-    ((ok)\<^sub>e (get\<^bsub>sys\<^esub> a)) \<and> (
-    v \<lparr>
-      sys\<^sub>v = get\<^bsub>\<^bold>v\<^sub>D\<^esub> (get\<^bsub>sys\<^esub> a)
-      ,vu\<^sub>v = get\<^bsub>vu\<^esub> a
-      ,\<dots> = get\<^bsub>viewed_system.more\<^sub>L\<^esub> a
-    \<rparr>)
-  )"
-
-term " (\<Delta>\<^sub>D (V:: (('a, 'b, 'c) viewed_system_scheme des_vars_ext \<Rightarrow> \<bool>)))"
-
-text "A deviation from Banks's work, to work around the issue with lemma 3.35"
-
-definition L\<^sub>D
-  where [banks_defs]: "L\<^sub>D V P = (\<not> L\<^sub>P  V (\<not> pre\<^sub>D(P)\<^sup><)) \<turnstile> (L V (post\<^sub>D(P)))"
-
-text "Type variation of law 3.20"
-
-term "P is \<^bold>H"
-
-find_theorems "\<^bold>H"
-
-lemma ld_monotonic: "(P1 \<sqsubseteq> P2) \<longrightarrow> ((L\<^sub>D v P1) \<sqsubseteq> (L\<^sub>D v P2))"
-  oops
-
-lemma "(\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> V) = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> V \<up> \<^bold>v\<^sub>D\<^sup>2) \<down> \<^bold>v\<^sub>D\<^sup>2"
-  by pred_auto
-
-lemma ok_indep: "($\<^bold>v\<^sub>D) \<sharp> (ok)\<^sub>e"
-  by (simp add: unrest_var_single)
-
 named_theorems indep_extra
 
 lemma before_ok_indep [indep_extra]: "($\<^bold>v\<^sub>D\<^sup><) \<sharp> (ok\<^sup><)\<^sub>e"
@@ -377,7 +329,8 @@ lemma [indep_extra]: "($\<^bold>v\<^sub>D\<^sup>>) \<sharp> (\<not>ok\<^sup><)\<
 lemma [indep_extra]: "($\<^bold>v\<^sub>D\<^sup><) \<sharp> (\<not>ok\<^sup>>)\<^sub>e"
   using mixed_ok_indep2 unrest_not by fastforce
 
-
+(* bdefs2 holds extra definitions that are closer to banks's definitions, for the purposes of making sure
+nobody can suggest that our simplifications are changing the problem *)
 named_theorems bdefs2
 
 definition OK2 where [bdefs2]:"OK2 v = ((v \<and> \<^bold>v\<^sub>D:vu:ok\<^sup>< = ok\<^sup>< \<and> \<^bold>v\<^sub>D:vu:ok\<^sup>> = ok\<^sup>>) \<longrightarrow> v)\<^sub>e"
@@ -393,6 +346,7 @@ definition L2 where [bdefs2]:"L2 v p = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><
 
 definition design_v where [bdefs2]: "design_v P Q = ((\<^bold>v\<^sub>D:vu:ok\<^sup>< \<and> P) \<longrightarrow> (\<^bold>v\<^sub>D:vu:ok\<^sup>> \<and> Q))\<^sub>e"
 
+(* This step shows that the transform of the left side of the equality is valid (as per Banks's proof)  *)
 lemma a1: "(L2 V (pre' \<turnstile> post')) = ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> (ok\<^sup>> \<and> post')\<^sub>e))"
 proof -
   have "(L2 V (pre' \<turnstile> post')) = (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> (ok\<^sup>< \<and> pre' \<longrightarrow> ok\<^sup>> \<and> post')\<^sub>e)"
@@ -408,6 +362,7 @@ proof -
     by (pred_auto)
 qed
 
+(* This step shows that the transform of the right side of the equality is valid (as per Banks's proof)  *)
 lemma a2:
   assumes "\<Delta> V is VHD2"
   shows "(design_v (\<not>L2 V (\<not>pre'))) ((L2 V post')) = ((\<not> (\<^bold>v\<^sub>D:vu:ok\<^sup><) \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre')) \<or> (\<^bold>v\<^sub>D:vu:ok\<^sup>>) \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
@@ -427,26 +382,21 @@ proof -
     by simp
 qed
 
+(**)
 lemma a3:
   assumes "\<Delta> V is VHD2"
+  assumes "V \<noteq> true"
   assumes "((\<exists> (\<^bold>v\<^sub>D:vu\<^sup><, \<^bold>v\<^sub>D:vu\<^sup>>) \<Zspot> post') \<longrightarrow> post') = post'"
   shows  "((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> (ok\<^sup>> \<and> post')\<^sub>e)) = ((\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
   using assms
-   apply (expr_simp add: banks_defs bdefs2)
-  try
+  apply -
+   apply (pred_auto add: banks_defs bdefs2)
+  done
 
-  sorry
-
-lemma "((\<Delta>
-         ((\<lambda>x. False)
-        (\<lparr>ok\<^sub>v = True, sys\<^sub>v = a\<^sub>1, vu\<^sub>v = \<lparr>ok\<^sub>v = True, \<dots> = a\<^sub>1\<rparr>, \<dots> = a\<^sub>1\<rparr> := True, \<lparr>ok\<^sub>v = True, sys\<^sub>v = a\<^sub>1, vu\<^sub>v = \<lparr>ok\<^sub>v = False, \<dots> = a\<^sub>1\<rparr>, \<dots> = a\<^sub>1\<rparr> := True,
-         \<lparr>ok\<^sub>v = False, sys\<^sub>v = a\<^sub>1, vu\<^sub>v = \<lparr>ok\<^sub>v = True, \<dots> = a\<^sub>1\<rparr>, \<dots> = a\<^sub>1\<rparr> := True, \<lparr>ok\<^sub>v = False, sys\<^sub>v = a\<^sub>1, vu\<^sub>v = \<lparr>ok\<^sub>v = False, \<dots> = a\<^sub>1\<rparr>, \<dots> = a\<^sub>1\<rparr> := True))) is VHD2)"
-  apply (pred_simp add: banks_defs bdefs2)
-  try
-
-
+(* A slight variation on the a1 step, thanks to a3 *)
 lemma a1_2:
   assumes "\<Delta> V is VHD2"
+ assumes "V \<noteq> true"
   assumes "((\<exists> (\<^bold>v\<^sub>D:vu\<^sup><, \<^bold>v\<^sub>D:vu\<^sup>>) \<Zspot> post') \<longrightarrow> post') = post'"
   shows "(L2 V (pre' \<turnstile> post')) = ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e) \<or> ((\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post')))"
   using assms
@@ -454,11 +404,14 @@ lemma a1_2:
   apply (subst a3)
    apply simp
    apply simp
+   apply simp
   apply simp
   done
 
-lemma
+(* This step brings together the previous steps to show that most of banks's transformation was correct *)
+lemma b1:
   assumes "\<Delta> V is VHD2"
+  assumes "V \<noteq> true"
   assumes "((\<exists> (\<^bold>v\<^sub>D:vu\<^sup><, \<^bold>v\<^sub>D:vu\<^sup>>) \<Zspot> post') \<longrightarrow> post') = post'"
   shows "(L2 V (pre' \<turnstile> post')) = ((\<not>L2 V (\<not>pre'))) \<turnstile> ((L2 V post')) \<longleftrightarrow> (
       ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e)   \<or>   (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))  
@@ -467,27 +420,32 @@ lemma
   using assms
   apply -
   apply (simp add: a1_2 a2)
-  apply auto
+  by (pred_simp add: banks_defs bdefs2)
 
-lemma
-  assumes "v is VHD2"
-  shows "((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e)   \<or>   (ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))  
-    \<noteq> ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre'))      \<or>   (ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
-  apply (cases "$ok = True")
+(* This proof shows that the step in the middle of banks's proof does not hold (the step called V is VHD) *)
+lemma b2:
+  assumes "\<Delta> V is VHD2"
+  assumes "V \<noteq> true"
+  shows "((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e)   \<or>   (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))  
+    \<noteq> ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre'))      \<or>   (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
+  using assms
+  apply -
   apply expr_simp
-  
+   apply (pred_auto add: banks_defs bdefs2)
+  done
 
-    apply pred_auto
-  
-  
-
-text "Lemma 3.35, but better"
-lemma view_local_design2 [banks_defs] :
-  fixes V :: "('a, 'b, 'c) viewed_system_scheme \<Rightarrow> \<bool>"
-  assumes "V is VH"
-  shows "(L\<^sub>D V (pre' \<turnstile>\<^sub>r post')) = ((\<not>L V (\<not>pre'))) \<turnstile>\<^sub>r ((L V post'))"
-  apply (simp add: banks_defs)
-  by (pred_auto)
+(* This is the root of the tree of proofs that show lemma 3.35 is wrong *)
+lemma lemma_3_35_is_wrong:
+  assumes "\<Delta> V is VHD2"
+  assumes "V \<noteq> true"
+  shows "\<not> ((L2 V (pre' \<turnstile> post')) = ((\<not>L2 V (\<not>pre'))) \<turnstile> ((L2 V post')))"
+  using assms
+  apply (subst b1)
+     apply simp
+    apply simp
+   apply (pred_auto add: banks_defs bdefs2)
+  using b2
+  by simp
 
 (* simplify with banks' definitions *)
 method expr_simp_banks uses add = ((expr_simp2 add: banks_defs add)?)
