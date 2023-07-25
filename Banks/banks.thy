@@ -11,14 +11,12 @@ This theory file refers to the definitions, laws, lemmas, etc in the above thesi
  "
 
 (* slight variation on the Isabelle/UTP expr_simp method *)
-(* TODO pull request to add this to base isabelle/UTP*)
 method expr_simp2 uses add = 
   ((simp add: expr_simps add)? \<comment> \<open> Perform any possible simplifications retaining the lens structure \<close>
    ;((simp add: fun_eq_iff prod.case_eq_if alpha_splits expr_defs lens_defs add)? ; \<comment> \<open> Explode the rest \<close>
      (simp add: expr_defs lens_defs add)?))
 
 named_theorems banks_defs
-named_theorems banks_lenses
 
 alphabet 's obligation_wrapper =
   obs :: 's
@@ -27,15 +25,6 @@ alphabet 's obligation_wrapper =
 alphabet ('s, 'v) viewed_system =
   sys :: 's
   vu :: 'v
-
-lemma [banks_defs]: "mwb_lens vu"
-  by simp
-lemma [banks_defs]: "mwb_lens sys"
-  by simp
-lemma [banks_defs]: "mwb_lens obs"
-  by simp
-lemma [banks_defs]: "mwb_lens fog"
-  by simp
 
 (* liberate1 is used to define VH3. it is like liberate, except that is uses "there exists one"
  instead of "there exists" *)
@@ -96,11 +85,9 @@ text "Law 3.9 (trivial because id is clearly idempotent and VH2 is just id)"
 lemma VH2_idempotent[banks_defs]: "VH2 \<circ> VH2 = VH2"
   by (expr_simp add: VH2_def)
 
-(*
 text "Law 3.10 (trivial because VH2 is id)"
 lemma VH1_2_non_commute: "(VH2 \<circ> VH1) V \<sqsubseteq> (VH1 \<circ> VH2) V"
   by (expr_simp add: VH2_def)
-*)
 
 text "Our VH2 simplification strengthens law 3.10"
 lemma VH1_2_commute: "(VH2 \<circ> VH1) = (VH1 \<circ> VH2)"
@@ -163,22 +150,6 @@ lemma  ex_conj_refine[banks_defs]: "(V \<and> P1)\<^sub>e \<sqsubseteq> (V \<and
 text "Definition 3.17"
 definition L
   where [banks_defs]: "L V P = (\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> (\<Delta> V \<and> P \<up> sys\<^sup>2 ))\<^sub>e"
-
-(*Alternative L definition option 1*)
-(*
-definition L_two_delta
-  where "L_two_delta V P = (\<exists> (sys\<^sup><, sys\<^sup>>) \<Zspot> (\<Delta> V \<and> \<Delta> P))\<^sub>e"
-
-expr_constructor L_two_delta
-*)
-
-(*Alternative L definition option 2*)
-(*
-definition L_one_alpha
-  where "L_one_alpha V P = (\<exists> sys \<Zspot> (V \<and> P))\<^sub>e"
-
-expr_constructor L_one_alpha
-*)
 
 text "Type variation of definition 3.17"
 definition L\<^sub>P
@@ -316,8 +287,8 @@ lemma b1:
   assumes "V \<noteq> true"
   assumes "((\<exists> (\<^bold>v\<^sub>D:vu\<^sup><, \<^bold>v\<^sub>D:vu\<^sup>>) \<Zspot> post') \<longrightarrow> post') = post'"
   shows "(L2 V (pre' \<turnstile> post')) = ((\<not>L2 V (\<not>pre'))) \<turnstile> ((L2 V post')) \<longleftrightarrow> (
-      ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e)   \<or>   (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))  
-    = ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre'))      \<or>   (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post')) 
+      ((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e) \<or> (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))  
+    = ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre'))    \<or> (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post')) 
   )"
   using assms
   apply -
@@ -328,8 +299,8 @@ lemma b1:
 lemma b2:
   assumes "\<Delta> V is VHD2"
   assumes "V \<noteq> true"
-  shows "((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e)   \<or>   (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))  
-    \<noteq> ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre'))      \<or>   (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
+  shows "((\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> ((\<not> ok\<^sup><) \<or> (\<not> pre'))\<^sub>e) \<or> (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))  
+    \<noteq> ((\<not> (ok)\<^sup>< \<or> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> \<not> pre'))      \<or> (\<^bold>v\<^sub>D:vu:ok)\<^sup>> \<and> (\<exists> (\<^bold>v\<^sub>D:sys\<^sup><, \<^bold>v\<^sub>D:sys\<^sup>>) \<Zspot> \<Delta> V \<and> post'))"
   using assms
   apply -
   apply expr_simp
