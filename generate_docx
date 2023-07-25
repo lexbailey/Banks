@@ -10,7 +10,6 @@ prefix = 'documentation/Unsorted/'
 for $f in [
         'Banks/banks.html'
         ,'BanksExamples/alice_guessing.html'
-        ,'BanksExamples/byte_register.html'
         ,'BanksExamples/localise_globalise.html'
     ]:
 
