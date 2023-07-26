@@ -18,10 +18,6 @@ method expr_simp2 uses add =
 
 named_theorems banks_defs
 
-alphabet 's obligation_wrapper =
-  obs :: 's
-  fog :: 's
-
 alphabet ('s, 'v) viewed_system =
   sys :: 's
   vu :: 'v
