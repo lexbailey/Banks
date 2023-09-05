@@ -25,5 +25,6 @@ jobs:
           path: |
             banks.docx
             alice_guessing.docx
-            byte_register.docx
             localise_globalise.docx
+            user_pass.docx
+            user_pass_noleak.docx
