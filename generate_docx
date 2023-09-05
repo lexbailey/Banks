@@ -11,6 +11,8 @@ for $f in [
         'Banks/banks.html'
         ,'BanksExamples/alice_guessing.html'
         ,'BanksExamples/localise_globalise.html'
+        ,'BanksExamples/user_pass.html'
+        ,'BanksExamples/user_pass_noleak.html'
     ]:
 
     $f = prefix + $f
