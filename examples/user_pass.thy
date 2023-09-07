@@ -109,4 +109,26 @@ lemma "(infer (system \<up> sys\<^sup>2) view ((vu:v_username\<^sup>< = ''Alice'
   )\<^sub>e"
   by (pred_auto_banks add: view_def system_def)
 
+lemma "(infer (spec \<up> sys\<^sup>2) view ((vu:v_username\<^sup>< = ''Alice'') \<and> vu:v_message\<^sup>> = ''Incorrect password'')\<^sub>e) \<down> sys\<^sup>2 = (
+    username\<^sup>> = ''Alice'' \<and> username\<^sup>< = ''Alice'' \<and>
+    password\<^sup>> = password\<^sup>< \<and>
+    db\<^sup>> = db\<^sup>< \<and>
+    message\<^sup>> = ''Incorrect password'' \<and>
+    (
+      (result\<^sup>> = Failure \<and> apply_f (db\<^sup><) ''Alice'' \<noteq> Some(password\<^sup><))
+      \<or>
+      (result\<^sup>> = Success \<and> apply_f (db\<^sup><) ''Alice'' = Some(password\<^sup><))
+    )
+  )\<^sub>e"
+  by (pred_auto_banks add: view_def spec_def)
+
+lemma "(infer (spec \<up> sys\<^sup>2) view ((vu:v_username\<^sup>< = ''Alice'') \<and> vu:v_result\<^sup>> = Failure)\<^sub>e) \<down> sys\<^sup>2 = (
+    username\<^sup>> = ''Alice'' \<and> username\<^sup>< = ''Alice'' \<and>
+    password\<^sup>> = password\<^sup>< \<and>
+    db\<^sup>> = db\<^sup>< \<and>
+    result\<^sup>> = Failure \<and>
+    apply_f (db\<^sup><) ''Alice'' \<noteq> Some(password\<^sup><)
+  )\<^sub>e"
+  by (pred_auto_banks add: view_def spec_def)
+
 end
